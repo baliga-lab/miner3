@@ -23,7 +23,4 @@ Note that the gene names will be converted to Ensembl Gene ID format
 
 # common mistakes to avoid
 1. miner does not support expression data in counts format. Ensure that data is in log2(TPM+1) or log2(FPKM+1) format.
-2. miner assumes that the expressionData.csv file is indexed with genes as the rows and samples as the columns. 
-  a. If your data has samples as the rows and genes as the columns, uncomment the following line in "Load input data" section of the tutorial:
-    expressionData = expressionData.T
-3. miner will look for gene names (ensembl, entrez, symbol, etc.) in the first column of the expressionData.csv file. If the expression data does not have gene labels, an error will be returned. If you do not have gene names (e.g., your data is not gene expression), skip the "miner.identifierConversion(expressionData)" line in order to avoid errors. 
+2. miner will look for gene names (ensembl, entrez, symbol, etc.) in the first column or first row of the expressionData.csv file. If the expression data does not have gene labels, an error will be returned. If you do not have gene names (e.g., your data is not gene expression), skip the "miner.identifierConversion(expressionData)" line in order to avoid errors. 
