@@ -1211,6 +1211,14 @@ def mapExpressionToNetwork(centroidMatrix,membershipMatrix,threshold = 0.2):
     
     return centroidClusters
 
+def expandRegulonDictionary(regulons):
+    regulonDictionary = {}
+    for tf in regulons.keys():
+        for key in regulons[tf].keys():
+            regulonKey = ("_").join([tf,key])
+            regulonDictionary[regulonKey] = regulons[tf][key]
+    return regulonDictionary
+
 def orderMembership(centroidMatrix,membershipMatrix,mappedClusters,resultsDirectory=None):
     centroidRank = []
     alreadyMapped = []
@@ -1760,6 +1768,70 @@ def survivalMedianAnalysis(task):
         
     return coxResults
 
+def survivalMembershipAnalysis(task):
+    import lifelines
+    #from lifelines import KaplanMeierFitter
+    from lifelines import CoxPHFitter
+
+    start, stop = task[0]
+    membershipDf,SurvivalDf = task[1]
+    
+    overlapPatients = list(set(membershipDf.columns)&set(SurvivalDf.index))
+    if len(overlapPatients) == 0:
+        print("samples are not represented in the survival data")
+        return 
+    Survival = SurvivalDf.loc[overlapPatients,SurvivalDf.columns[0:2]]
+       
+    coxResults = {}
+    keys = membershipDf.index[start:stop]
+    ct=0
+    for key in keys:
+        ct+=1
+        if ct%10==0:
+            print(ct)
+        memberVector = pd.DataFrame(membershipDf.loc[key,overlapPatients])
+        Survival2 = pd.concat([Survival,memberVector],axis=1)
+        Survival2.sort_values(by=Survival2.columns[0],inplace=True)
+        
+        cph = CoxPHFitter()
+        cph.fit(Survival2, duration_col=Survival2.columns[0], event_col=Survival2.columns[1])
+        
+        tmpcph = cph.summary
+        
+        cox_hr = tmpcph.loc[key,"z"]
+        cox_p = tmpcph.loc[key,"p"]  
+        coxResults[key] = (cox_hr, cox_p)
+        
+    return coxResults
+
+def survivalMembershipAnalysisDirect(membershipDf,SurvivalDf,key):
+    import lifelines
+    #from lifelines import KaplanMeierFitter
+    from lifelines import CoxPHFitter
+    
+    overlapPatients = list(set(membershipDf.columns)&set(SurvivalDf.index))
+    if len(overlapPatients) == 0:
+        print("samples are not represented in the survival data")
+        return 
+    Survival = SurvivalDf.loc[overlapPatients,SurvivalDf.columns[0:2]]
+       
+    coxResults = {}
+
+    memberVector = pd.DataFrame(membershipDf.loc[key,overlapPatients])
+    Survival2 = pd.concat([Survival,memberVector],axis=1)
+    Survival2.sort_values(by=Survival2.columns[0],inplace=True)
+    
+    cph = CoxPHFitter()
+    cph.fit(Survival2, duration_col=Survival2.columns[0], event_col=Survival2.columns[1])
+    
+    tmpcph = cph.summary
+    
+    cox_hr = tmpcph.loc[key,"z"]
+    cox_p = tmpcph.loc[key,"p"]  
+    coxResults[key] = (cox_hr, cox_p)
+        
+    return coxResults
+
 def parallelSurvivalAnalysis(coexpressionModules,expressionData,numCores=5,survivalPath=os.path.join("..","data","survivalIA12.csv"),survivalData=None):
 
     if survivalData is None:
@@ -1771,6 +1843,25 @@ def parallelSurvivalAnalysis(coexpressionModules,expressionData,numCores=5,survi
     survivalAnalysis = condenseOutput(coxOutput)
 
     return survivalAnalysis
+
+def parallelMemberSurvivalAnalysis(membershipDf,numCores=5,survivalPath=os.path.join("..","data","survivalIA12.csv"),survivalData=None):
+
+    if survivalData is None:
+        survivalData = pd.read_csv(survivalPath,index_col=0,header=0)
+    taskSplit = splitForMultiprocessing(membershipDf.index,numCores)
+    taskData = (membershipDf,survivalData)
+    tasks = [[taskSplit[i],taskData] for i in range(len(taskSplit))]
+    coxOutput = multiprocess(survivalMembershipAnalysis,tasks)
+    survivalAnalysis = condenseOutput(coxOutput)
+
+    return survivalAnalysis
+
+def getStratifiers(membershipSurvival,threshold):
+    stratifiers = {}
+    for key in membershipSurvival.keys():
+        if membershipSurvival[key][1]<threshold:
+            stratifiers[key] = membershipSurvival[key]
+    return stratifiers
 
 def collectResults(coexpressionModules,samples,motifAnalysis,mechanisticOutput,survivalAnalysis):
     minerCollectedResults = {}
@@ -2205,14 +2296,25 @@ def identifierConversion(expressionData,conversionTable=os.path.join("..","data"
     idMap = pd.read_table(conversionTable)
     genetypes = list(set(idMap.iloc[:,2]))
     previousIndex = np.array(expressionData.index).astype(str)    
+    previousColumns = np.array(expressionData.columns).astype(str)  
     for geneType in genetypes:
         subset = idMap[idMap.iloc[:,2]==geneType]
         subset.index = subset.iloc[:,1]
         mappedGenes = list(set(previousIndex)&set(subset.index))
+        mappedSamples = list(set(previousColumns)&set(subset.index))
         if len(mappedGenes)>=max(10,0.01*expressionData.shape[0]):
             break
+        if len(mappedSamples)>=max(10,0.01*expressionData.shape[0]):
+            break
+    
     if len(mappedGenes) == 0:
-        print("Error: Gene identifiers not recognized")
+        if len(mappedSamples) == 0:
+            print("Error: Gene identifiers not recognized")
+    
+    if len(mappedSamples)>len(mappedGenes):
+        expressionData = expressionData.T
+        mappedGenes = mappedSamples
+        
     try:
         convertedData = expressionData.loc[mappedGenes,:]
     except:
@@ -2260,12 +2362,66 @@ def membershipToIncidence(membershipDictionary,expressionData):
         samples = membershipDictionary[key]
         incidence.loc[key,samples] = 1
     
-    orderIndex = np.array(incidence.index).astype(int)
-    orderIndex = np.sort(orderIndex)
+    try:
+        orderIndex = np.array(incidence.index).astype(int)
+        orderIndex = np.sort(orderIndex)
+    except:
+        orderIndex = incidence.index
     try:
         incidence = incidence.loc[orderIndex,:]
     except:
         incidence = incidence.loc[orderIndex.astype(str),:]
         
     return incidence
+
+def laplacian(regulons,resultsDirectory=None):
+    lens = [len(regulons[i]) for i in regulons.keys()]
+    genes = list(set(np.hstack([np.hstack([regulons[i][j] for j in regulons[i].keys()]) for i in regulons.keys()])))
+    degree = np.hstack([lens,np.ones(sum(lens))])
+
+    features = list(set(regulons.keys())|set(genes))
+    laplacianIncidence = pd.DataFrame(np.zeros((len(features),len(features))))
+    laplacianIncidence.index = features
+    laplacianIncidence.columns = features
+    for tf in regulons.keys():
+        tfGenes = list(set(np.hstack([regulons[tf][i] for i in regulons[tf].keys()])))
+        laplacianIncidence.loc[tf,tfGenes] = -1
+        laplacianIncidence.loc[tfGenes,tf] = -1
+    trace = -np.sum(laplacianIncidence,axis=1)
+    for i in range(len(trace)):
+        laplacianIncidence.iloc[i,i] = trace[i]
+
+    Tneg = pd.DataFrame(np.zeros((len(features),len(features))))
+    Tneg.index = features
+    Tneg.columns = features
+    for i in range(len(trace)):
+        Tneg.iloc[i,i] = 1./np.sqrt(trace[i])
+
+    Laplacian = np.dot(np.array(Tneg),np.dot(np.array(laplacianIncidence),np.array(Tneg)))
+
+    Laplacian = pd.DataFrame(Laplacian)
+    Laplacian.index = features
+    Laplacian.columns = features
+    if resultsDirectory is not None:
+        Laplacian.to_csv(os.path.join(resultsDirectory,"regulonsLaplacian.csv"))
+
+    listLaplacian = [list(Laplacian.iloc[i,:]) for i in range(Laplacian.shape[0])]
+
+    from scipy import sparse
+    sparseLaplacian = sparse.csr_matrix(listLaplacian)
+    vals, vecs = sparse.linalg.eigsh(sparseLaplacian, k=30)
+
+    eigenvectors = pd.DataFrame(vecs)
+    eigenvectors.index = features
+    eigenvectors.columns = range(vecs.shape[1])
+    if resultsDirectory is not None:
+        eigenvectors.to_csv(os.path.join(resultsDirectory,"regulonsLaplacianEigenvectors.csv"))
+
+    eigenvalues = pd.DataFrame(vals)
+    eigenvalues.index = range(len(vals))
+    eigenvalues.columns = ["eigenvalues"]
+    if resultsDirectory is not None:
+        eigenvalues.to_csv(os.path.join(resultsDirectory,"regulonsLaplacianEigenvalues.csv"))
+
+    return Laplacian, eigenvectors, eigenvalues
     
