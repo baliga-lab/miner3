@@ -8,13 +8,13 @@ Created on Wed Feb 20 13:20:40 2019
 import numpy as np
 import pandas as pd
 from scipy import stats
-from numpy import random as rd
 import os
 from sklearn.decomposition import PCA
 #import multiprocessing, multiprocessing.pool
 import matplotlib.pyplot as plt
 import time
 from collections import Counter
+#import seaborn as sns
 
 # =============================================================================
 # Functions used for reading and writing files
@@ -39,9 +39,33 @@ def write_json(dict_, output_file):
         json.dump(dict_, fp)
     return
 
+def readFileToDf(filename):
+    extension = filename.split(".")[-1]
+    if extension == "csv":
+        df = pd.read_csv(filename,index_col=0,header=0)
+        shape = df.shape
+        if shape[1] == 0:
+            df = pd.read_csv(filename,index_col=0,header=0,sep="\t")
+    elif extension == "txt":
+        df = pd.read_csv(filename,index_col=0,header=0,sep="\t")
+        shape = df.shape
+        if shape[1] == 0:
+            df = pd.read_csv(filename,index_col=0,header=0)    
+    return df
+
 # =============================================================================
 # Functions used for pre-processing data
 # =============================================================================
+
+def removeNullRows(df):
+    
+    minimum = np.percentile(df,0)
+    if minimum == 0:
+        filteredDf = df.loc[df.sum(axis=1)>0,:]
+    else:
+        filteredDf = df
+        
+    return filteredDf
 
 def identifierConversion(expressionData,conversionTable=os.path.join("..","data","identifier_mappings.txt")):    
     idMap = pd.read_table(conversionTable)
@@ -128,7 +152,82 @@ def readExpressionFromGZipFiles(directory):
     expressionData = pd.concat(sample_dfs,axis=1)
     return expressionData
 
-def transformFPKM(expressionData,fpkm_threshold=1,minFractionAboveThreshold=0.5,highlyExpressed=False):
+def entropy(vector):
+    
+    data = np.array(vector)
+    hist = np.histogram(data,bins=50)[0]
+    length = len(hist)
+
+    if length <= 1:
+        return 0
+
+    counts = np.bincount(hist)
+    probs = [float(i)/length for i in counts]
+    n_classes = np.count_nonzero(probs)
+
+    if n_classes <= 1:
+        return 0
+
+    ent = 0.
+
+    # Compute standard entropy.
+    for i in probs:
+        if i >0:
+            ent -= float(i)*np.log(i)
+    return ent
+
+def quantile_norm(df,axis=1):
+    import numpy as np
+    import pandas as pd
+    from scipy.stats import rankdata
+
+    if axis == 1:    
+        array = np.array(df)
+        
+        ranked_array = np.zeros(array.shape)    
+        for i in range(0,array.shape[0]):
+            ranked_array[i,:] = rankdata(array[i,:],method='min') - 1
+            
+        sorted_array = np.zeros(array.shape)    
+        for i in range(0,array.shape[0]):
+            sorted_array[i,:] = np.sort(array[i,:])
+            
+        qn_values = np.nanmedian(sorted_array,axis=0)
+        
+        quant_norm_array = np.zeros(array.shape)
+        for i in range(0,array.shape[0]):
+            for j in range(0,array.shape[1]):
+                quant_norm_array[i,j] = qn_values[int(ranked_array[i,j])]
+        
+        quant_norm = pd.DataFrame(quant_norm_array)
+        quant_norm.columns = list(df.columns)
+        quant_norm.index = list(df.index)
+    
+    if axis == 0:
+        array = np.array(df)
+        
+        ranked_array = np.zeros(array.shape)    
+        for i in range(0,array.shape[1]):
+            ranked_array[:,i] = rankdata(array[:,i],method='min') - 1
+            
+        sorted_array = np.zeros(array.shape)    
+        for i in range(0,array.shape[1]):
+            sorted_array[:,i] = np.sort(array[:,i])
+            
+        qn_values = np.nanmedian(sorted_array,axis=1)
+        
+        quant_norm_array = np.zeros(array.shape)
+        for i in range(0,array.shape[0]):
+            for j in range(0,array.shape[1]):
+                quant_norm_array[i,j] = qn_values[int(ranked_array[i,j])]
+        
+        quant_norm = pd.DataFrame(quant_norm_array)
+        quant_norm.columns = list(df.columns)
+        quant_norm.index = list(df.index)
+                
+    return quant_norm
+
+def transformFPKM(expressionData,fpkm_threshold=1,minFractionAboveThreshold=0.5,highlyExpressed=False,quantile_normalize=False):
 
     median = np.median(np.median(expressionData,axis=1))
     expDataCopy = expressionData.copy()
@@ -149,11 +248,87 @@ def transformFPKM(expressionData,fpkm_threshold=1,minFractionAboveThreshold=0.5,
         median_filtered_genes = expDataFiltered.index[keepers]    
         expDataFiltered = expressionData.loc[median_filtered_genes,:]
     
+    if quantile_normalize is True:
+        expDataFiltered = quantile_norm(expDataFiltered,axis=0)
+        
     finalExpData = pd.DataFrame(np.log2(expDataFiltered+1))
     finalExpData.index = expDataFiltered.index
     finalExpData.columns = expDataFiltered.columns
     
     return finalExpData
+
+def preProcessTPM(tpm):
+    
+    from scipy import stats
+    cutoff = stats.norm.ppf(0.00001)
+    
+    tmp_array_raw = np.array(tpm)
+    keep = []
+    keepappend = keep.append
+    for i in range(0,tmp_array_raw.shape[0]):
+        if np.count_nonzero(tmp_array_raw[i,:]) >= round(float(tpm.shape[1])*0.5):
+            keepappend(i)
+
+    tpm_zero_filtered = tmp_array_raw[keep,:]
+    tpm_array = np.array(tpm_zero_filtered)
+    positive_medians = []
+
+    for i in range(0,tpm_array.shape[1]):
+        tmp1 = tpm_array[:,i][tpm_array[:,i]>0]
+        positive_medians.append(np.median(tmp1))
+
+    # 2^10 - 1 = 1023
+    scale_factors = [float(1023)/positive_medians[i] for i in range(0,len(positive_medians))]
+
+    tpm_scale = np.zeros(tpm_array.shape)
+    for i in range(0,tpm_scale.shape[1]):
+        tpm_scale[:,i] = tpm_array[:,i]*scale_factors[i]
+
+    tpm_scale_log2 = np.zeros(tpm_scale.shape)
+    for i in range(0,tpm_scale_log2.shape[1]):
+        tpm_scale_log2[:,i] = np.log2(tpm_scale[:,i]+1)
+
+    tpm_filtered_df = pd.DataFrame(tpm_scale_log2)
+    tpm_filtered_df.columns = list(tpm.columns)
+    tpm_filtered_df.index = list(np.array(tpm.index)[keep])
+
+    qn_tpm_filtered = quantile_norm(tpm_filtered_df,axis=0)
+    qn_tpm = quantile_norm(qn_tpm_filtered,axis=1)
+
+    qn_tpm_array = np.array(qn_tpm)
+
+    tpm_z = np.zeros(qn_tpm_array.shape)
+    for i in range(0,tpm_z.shape[0]):
+        tmp = qn_tpm_array[i,:][qn_tpm_array[i,:]>0]
+        mean = np.mean(tmp)
+        std = np.std(tmp)
+        for j in range(0,tpm_z.shape[1]):
+            tpm_z[i,j] = float(qn_tpm_array[i,j] - mean)/std
+            if tpm_z[i,j] < -4:
+                tpm_z[i,j] = cutoff
+
+    tpm_entropy = []
+    for i in range(0,tpm_z.shape[0]):
+        tmp = entropy(tpm_z[i,:])
+        tpm_entropy.append(tmp)
+
+    tpmz_df = pd.DataFrame(tpm_z)
+    tpmz_df.columns = list(tpm.columns)
+    tpmz_df.index = list(np.array(tpm.index)[keep])
+
+
+    ent = pd.DataFrame(tpm_entropy)
+    ent.index = list(tpmz_df.index)
+    ent.columns = ['entropy']
+
+    tpm_ent_df = pd.concat([tpmz_df,ent],axis=1)
+
+    tpm_entropy_sorted = tpm_ent_df.sort_values(by='entropy',ascending=False)
+
+    tmp = tpm_entropy_sorted[tpm_entropy_sorted.loc[:,'entropy']>=0]
+    tpm_select = tmp.iloc[:,0:-1]
+
+    return tpm_select
 
 def zscore(expressionData):
     zero = np.percentile(expressionData,0)
@@ -169,6 +344,29 @@ def zscore(expressionData):
         transform = ((expressionData.iloc[passIndex,:].T - means[passIndex])/stds[passIndex]).T
     print("completed z-transformation.")
     return transform
+
+def correctBatchEffects(df): 
+    
+    zscoredExpression = zscore(df)
+    means = []
+    stds = []
+    for i in range(zscoredExpression.shape[1]):
+        mean = np.mean(zscoredExpression.iloc[:,i])
+        std = np.std(zscoredExpression.iloc[:,i])
+        means.append(mean)
+        stds.append(std)
+
+    if np.std(means) >= 0.15:
+        zscoredExpression = preProcessTPM(df)
+        
+    return zscoredExpression
+
+def preprocess(filename):
+    rawExpression = readFileToDf(filename)
+    rawExpressionZeroFiltered = removeNullRows(rawExpression)
+    zscoredExpression = correctBatchEffects(rawExpressionZeroFiltered)
+    expressionData, conversionTable = identifierConversion(zscoredExpression)
+    return expressionData, conversionTable
 
 # =============================================================================
 # Functions used for clustering 
@@ -805,7 +1003,6 @@ def tfbsdbEnrichment(task,p=0.05):
     
     clusterTfs = {}
     for key in keys:
-        print(key)
         for tf in tfMap[str(key)]:    
             hits0TfTargets = list(set(tfToGenes[tf])&set(allGenes))   
             hits0clusterGenes = revisedClusters[key]
@@ -831,6 +1028,8 @@ def condenseOutput(output):
 
 def mechanisticInference(axes,revisedClusters,expressionData,correlationThreshold=0.3,numCores=5,dataFolder=os.path.join(os.path.expanduser("~"),"Desktop","miner","data")):
     import os
+    
+    print('Running mechanistic inference')
     tfToGenesPath = os.path.join(dataFolder,"network_dictionaries","tfbsdb_tf_to_genes.pkl")
     tfToGenes = read_pkl(tfToGenesPath)
      
@@ -840,6 +1039,8 @@ def mechanisticInference(axes,revisedClusters,expressionData,correlationThreshol
     tasks = [[taskSplit[i],(expressionData,revisedClusters,tfMap,tfToGenes)] for i in range(len(taskSplit))]
     tfbsdbOutput = multiprocess(tfbsdbEnrichment,tasks)
     mechanisticOutput = condenseOutput(tfbsdbOutput)
+    
+    print('Completed mechanistic inference')
     
     return mechanisticOutput
 
@@ -946,7 +1147,7 @@ def convertRegulons(df,conversionTable):
     regulonDfConverted.columns = ["Regulon_ID","Regulator","Gene"]
     return regulonDfConverted
 
-def generateInputForFIRM(revisedClusters,resultsDirectory):
+def generateInputForFIRM(revisedClusters,saveFile):
 
     identifier_mapping = pd.read_csv(os.path.join(os.path.split(os.getcwd())[0],"data","identifier_mappings.txt"),sep="\t")
     identifier_mapping_entrez = identifier_mapping[identifier_mapping.Source == "Entrez Gene ID"]
@@ -965,7 +1166,7 @@ def generateInputForFIRM(revisedClusters,resultsDirectory):
 
     firm_df = pd.DataFrame(np.vstack([Gene,Group]).T)
     firm_df.columns = ["Gene","Group"]    
-    firm_df.to_csv(os.path.join(resultsDirectory,"firm_df.txt"),index=None,sep="\t")
+    firm_df.to_csv(saveFile,index=None,sep="\t")
 
     return firm_df
     
@@ -1257,8 +1458,6 @@ def mosaic(dfr,clusterList,minClusterSize_x=4,minClusterSize_y=5,allow_singleton
     for i in range(dfr.shape[0]):
         lowResolutionPrograms[choice[i]].append(dfr.index[i])
     
-    print(len(lowResolutionPrograms))
-    
     #Cluster modules into transcriptional programs
     
     y_clusters = []
@@ -1292,7 +1491,6 @@ def mosaic(dfr,clusterList,minClusterSize_x=4,minClusterSize_y=5,allow_singleton
     
         if len(sil_scores) > 0:
             top_hit = min(np.where(np.array(sil_scores)>=0.95*max(sil_scores))[0]+2)
-            print(top_hit)
             clusters_y, labels_y, centroids_y = kmeans(df,numClusters=top_hit,random_state=random_state)
             clusters_y.sort(key=lambda s: -len(s))
             y_clusters.append(list(clusters_y))
@@ -1345,7 +1543,6 @@ def mosaic(dfr,clusterList,minClusterSize_x=4,minClusterSize_y=5,allow_singleton
     
         if len(sil_scores) > 0:
             top_hit = min(np.where(np.array(sil_scores)>=0.999*max(sil_scores))[0]+2)
-            print(top_hit)
             clusters_x, labels_x, centroids_x = kmeans(df,numClusters=top_hit,random_state=random_state)
             clusters_x.sort(key=lambda s: -len(s))
             x_clusters.append(list(clusters_x))
@@ -2620,3 +2817,107 @@ def predictRisk(expressionDf,regulonModules,model_filename):
     lr_dt = labels[(1-prediction).astype(bool)]
 
     return hr_dt, lr_dt
+
+def gene_conversion(gene_list,input_type="ensembl.gene", output_type="symbol",list_symbols=None):
+
+    if input_type =="ensembl":
+        input_type = "ensembl.gene"
+    if output_type =="ensembl":
+        output_type = "ensembl.gene"
+    #kwargs = symbol,ensembl, entrezgene
+    import mygene #requires pip install beyond anaconda
+    mg = mygene.MyGeneInfo()
+    gene_query = mg.querymany(gene_list, scopes=input_type, fields=[output_type], species="human", as_dataframe=True)
+
+    if list_symbols is not None:
+        if output_type == "ensembl.gene":
+            list_ = list(gene_query[output_type])
+            #print(list_)
+            output = []
+            for dict_ in list_:
+                if type(dict_) is dict:
+                    output.append(dict_["gene"])
+                else:
+                    for subdict in dict_:
+                        output.append(subdict["gene"])
+        else:
+            output = list(gene_query[output_type])
+        return output
+    
+    dict_ = {}
+    try:
+        trimmed_df = gene_query[gene_query.iloc[:,2]>0]
+        for i in range(0,trimmed_df.shape[0]):
+            tmp = trimmed_df.index[i]
+            tmp1 = trimmed_df.iloc[i,2]
+            dict_[tmp] = []
+            lencheck = len(tmp1)
+            if lencheck == 1:
+                dict_[tmp].append(str(tmp1).split("'")[3])
+            if lencheck > 1:
+                for j in range(0,len(tmp1)):            
+                    dict_[tmp].append(str(tmp1[j]).split("'")[3])
+    except:
+        return gene_query
+    
+    return dict_
+
+def swarmplot(samples,survival,savefile,ylabel="Relative risk",labels = None):
+    
+    import seaborn as sns
+    allSamples = samples
+    try:
+        allSamples = np.hstack(samples)
+    except:
+        pass
+    
+    survival_samples = list(set(survival.index)&set(allSamples))
+    srv = survival.loc[survival_samples,:]
+    guan_srv = pd.DataFrame(srv.loc[:,"GuanScore"])
+    guan_srv.columns = ["value"]
+    guan_srv_group = pd.DataFrame(-np.ones(guan_srv.shape[0]))
+    guan_srv_group.index = guan_srv.index
+    guan_srv_group.columns = ["group"]
+    guan_srv_df = pd.concat([guan_srv,guan_srv_group],axis=1)
+    
+    if len(samples[0][0]) > 1:
+        groups = samples
+    
+    elif len(samples[0][0]) == 1:
+        groups = []
+        groups.append(samples)
+    
+    if labels is None:
+        labels = range(len(groups))
+        
+    label_dfs = []
+    for i in range(len(groups)):
+        group = list(set(srv.index)&set(groups[i]))
+        if len(group)>=1:
+            label = labels[i]
+            tmp_df = guan_srv_df.loc[group,:]
+            tmp_df.loc[:,"group"] = label
+            label_dfs.append(tmp_df)
+    if len(label_dfs)>1:
+        guan_srv_df = pd.concat(label_dfs,axis=0)
+    elif len(label_dfs)==1:
+        guan_srv_df = label_dfs[0]
+    
+    plt.figure(figsize=(12,8))
+    ax = sns.boxplot(x='group', y='value', data=guan_srv_df)
+    for patch in ax.artists:
+        patch.set_edgecolor('black')
+        r, g, b, a = patch.get_facecolor()
+        patch.set_facecolor((r, g, b, 0.8))
+
+    sns.swarmplot(x='group', y='value',data=guan_srv_df,size=7, color=[0.15,0.15,0.15],edgecolor="black")
+
+    plt.ylabel(ylabel,FontSize=24)
+    plt.xlabel("",FontSize=0)
+    plt.ylim(-0.05,1.05)
+    plt.xticks(FontSize=18)
+    plt.yticks(FontSize=18)
+    plt.savefig(savefile,bbox_inches="tight")
+
+    
+    return guan_srv_df
