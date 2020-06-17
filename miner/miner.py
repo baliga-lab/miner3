@@ -2092,8 +2092,9 @@ def univariate_comparison(subtypes,srv,expressionData,network_activity_diff,n_it
             
     boxplot_dataframe = pd.DataFrame(np.vstack(rows))
     boxplot_dataframe.columns = ["Subtype", "Method", "AUC"]
-    boxplot_dataframe.loc[:,"AUC"] = boxplot_dataframe.loc[:,"AUC"].convert_objects(convert_numeric=True)
-    
+    #boxplot_dataframe.loc[:,"AUC"] = boxplot_dataframe.loc[:,"AUC"].convert_objects(convert_numeric=True)
+    boxplot_dataframe.loc[:,"AUC"] = pd.to_numeric(boxplot_dataframe.loc[:,"AUC"])
+
     sns.set(font_scale=1.5,style="whitegrid")
     fig = plt.figure(figsize=(16,4))
     p = sns.stripplot(data=boxplot_dataframe, x='Subtype', y='AUC',hue="Method",
@@ -5320,6 +5321,7 @@ def boxplot_figure(boxplot_data,labels):
 
     formatted_boxplot_data = pd.DataFrame(np.vstack([formatted_data,formatted_labels]).T)
     formatted_boxplot_data.columns = ["data","label"]
-    formatted_boxplot_data.iloc[:,0] = formatted_boxplot_data.iloc[:,0].convert_objects(convert_numeric=True)
+    #formatted_boxplot_data.iloc[:,0] = formatted_boxplot_data.iloc[:,0].convert_objects(convert_numeric=True)
+    formatted_boxplot_data.iloc[:,0] = pd.to_numeric(formatted_boxplot_data.iloc[:,0])
 
     return formatted_boxplot_data
