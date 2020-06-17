@@ -42,7 +42,7 @@ if not os.path.isdir(resultsDirectory):
 # =============================================================================
 
 os.chdir(os.path.join(input_path,'src'))
-import miner_py3 as miner
+import miner
 
 # =============================================================================
 # Load primary data
