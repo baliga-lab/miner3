@@ -229,16 +229,15 @@ def readExpressionFromGZipFiles(directory):
     expressionData = pd.concat(sample_dfs,axis=1)
     return expressionData
 
-def readCausalFiles(directory):
+def readCausalFiles(rootDir):
 
-    rootDir = directory
     sample_dfs = []
     for dirName, subdirList, fileList in os.walk(rootDir):
         for fname in fileList:
-            #print('\t%s' % fname)
+            #print('%s\t%s' % (dirName, fname))
             extension = fname.split(".")[-1]
             if extension == 'csv':
-                path = os.path.join(rootDir,dirName,fname)
+                path = os.path.join(dirName,fname)
                 df = pd.read_csv(path, index_col=0,header=0)
                 df.index = np.array(df.index).astype(str)
                 sample_dfs.append(df)
@@ -3918,13 +3917,11 @@ def wiringDiagram(causal_results,regulonModules,coherent_samples_matrix,include_
 
 def biclusterTfIncidence(mechanisticOutput,regulons=None):
 
-    import pandas as pd
-    import numpy as np
-    
     if regulons is not None:
-    
-        allTfs = regulons.keys()
-        
+
+        # WW: this fails in Python 3 when it is not a list
+        allTfs = list(regulons.keys())
+
         tfCount = []
         ct=0
         for tf in list(regulons.keys()):
@@ -4168,9 +4165,9 @@ def analyzeCausalResults(task):
     preProcessedCausalResults,mechanisticOutput,filteredMutations,tfExp,eigengenes = task[1]
     postProcessed = {}
     if mechanisticOutput is not None:
-        mechOutKeyType = type(mechanisticOutput.keys()[0])
+        mechOutKeyType = type(list(mechanisticOutput.keys())[0])
     allPatients = set(filteredMutations.columns)
-    keys = preProcessedCausalResults.keys()[start:stop]
+    keys = list(preProcessedCausalResults.keys())[start:stop]
     ct=-1
     for bc in keys:
         ct+=1
