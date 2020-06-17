@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import time
 from collections import Counter
 #import seaborn as sns
+import mygene #requires pip install beyond anaconda
 
 # =============================================================================
 # Functions used for reading and writing files
@@ -4368,7 +4369,6 @@ def gene_conversion(gene_list,input_type="ensembl.gene", output_type="symbol",li
     if output_type =="ensembl":
         output_type = "ensembl.gene"
     #kwargs = symbol,ensembl, entrezgene
-    import mygene #requires pip install beyond anaconda
     mg = mygene.MyGeneInfo()
     gene_query = mg.querymany(gene_list, scopes=input_type, fields=[output_type], species="human", as_dataframe=True)
 
