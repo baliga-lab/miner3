@@ -1,16 +1,16 @@
-The miner2-riskpredict tool
+The miner3-riskpredict tool
 ===========================
 
 This utility calculates risk prediction data from its input
 
-You can see the tool's available options when you enter ``miner2-riskpredict -h``
+You can see the tool's available options when you enter ``miner3-riskpredict -h``
 at the command prompt:
 
 .. highlight:: none
 
 ::
 
-  usage: miner2-riskpredict [-h] [--method METHOD] input outdir
+  usage: miner3-riskpredict [-h] [--method METHOD] input outdir
 
   miner-riskpredict - MINER compute risk prediction.
   MINER Version development (Git SHA 563821013b1f4189d012b54416a7989396d0811d)
@@ -27,7 +27,7 @@ at the command prompt:
 Parameters in detail
 --------------------
 
-``miner2-riskpredict`` expects at least these 2 arguments:
+``miner3-riskpredict`` expects at least these 2 arguments:
 
   * **input:** an input specification in JSON format
   * **outdir:** The directory where the result files will be placed in.

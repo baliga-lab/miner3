@@ -1,18 +1,18 @@
-The miner2-survival tool
+The miner3-survival tool
 ========================
 
 This utility performs survival analysis
 
-You can see the tool's available options when you enter ``miner2-survival -h``
+You can see the tool's available options when you enter ``miner3-survival -h``
 at the command prompt:
 
 .. highlight:: none
 
 ::
 
-    usage: miner2-survival [-h] expfile mapfile regulons survfile outdir
+    usage: miner3-survival [-h] expfile mapfile regulons survfile outdir
 
-    miner2-survival - MINER survival analysis
+    miner3-survival - MINER survival analysis
 
     positional arguments:
       expfile     input matrix
@@ -27,7 +27,7 @@ at the command prompt:
 Parameters in detail
 --------------------
 
-``miner2-survival`` expects at least these 4 arguments:
+``miner3-survival`` expects at least these 4 arguments:
 
   * **expfile:** The gene expression file a matrix in csv format.
   * **mapfile:** The gene identifier map file.

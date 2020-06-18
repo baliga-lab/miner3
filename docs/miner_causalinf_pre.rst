@@ -1,20 +1,20 @@
-The miner2-causalinf-pre tool
+The miner3-causalinf-pre tool
 =============================
 
-This utility generates the input parameters for the miner2-neo utility
+This utility generates the input parameters for the miner3-neo utility
 
-You can see the tool's available options when you enter ``miner2-causalinf-pre -h``
+You can see the tool's available options when you enter ``miner3-causalinf-pre -h``
 at the command prompt:
 
 .. highlight:: none
 
 ::
 
-    usage: miner2-causalinf-pre [-h]
+    usage: miner3-causalinf-pre [-h]
                                 expfile mapfile mechout coexp coreg mutation
                                 datadir outdir
 
-    miner2-causalinf-pre - MINER pre-compute causal inference
+    miner3-causalinf-pre - MINER pre-compute causal inference
 
     positional arguments:
       expfile     input matrix
@@ -32,7 +32,7 @@ at the command prompt:
 Parameters in detail
 --------------------
 
-``miner2-causalinf-pre`` expects at least these 8 arguments:
+``miner3-causalinf-pre`` expects at least these 8 arguments:
 
   * **expfile:** The gene expression file a matrix in csv format.
   * **mapfile:** The gene identifier map file.

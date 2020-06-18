@@ -1,18 +1,18 @@
-The miner2-subtypes tool
+The miner3-subtypes tool
 =========================
 
 This utility generates sample subtype and related plots
 
-You can see the tool's available options when you enter ``miner2-subtypes -h``
+You can see the tool's available options when you enter ``miner3-subtypes -h``
 at the command prompt:
 
 .. highlight:: none
 
 ::
 
-    usage: miner2-subtypes [-h] expfile mapfile regulons outdir
+    usage: miner3-subtypes [-h] expfile mapfile regulons outdir
 
-    miner2-subtypes - MINER compute sample subtypes
+    miner3-subtypes - MINER compute sample subtypes
 
     positional arguments:
       expfile     input matrix
@@ -27,7 +27,7 @@ at the command prompt:
 Parameters in detail
 --------------------
 
-``miner2-subtypes`` expects at least these 4 arguments:
+``miner3-subtypes`` expects at least these 4 arguments:
 
   * **expfile:** The gene expression file a matrix in csv format.
   * **mapfile:** The gene identifier map file.

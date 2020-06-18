@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to isb-miner
-====================
+Welcome to isb-miner3
+=====================
 
 isb-miner is a framework of analysis tools for inferring biological networks
 from experimental data.
@@ -13,13 +13,13 @@ from experimental data.
    :maxdepth: 2
    :caption: Contents:
 
-   miner2-coexpr <miner_coexpr>
-   miner2-mechinf <miner_mechinf>
-   miner2-bcmembers <miner_bcmembers>
-   miner2-subtypes <miner_subtypes>
-   miner2-survival <miner_survival>
-   miner2-causalinf-pre <miner_causalinf_pre>
-   miner2-neo <miner_neo>
-   miner2-causalinf-post <miner_causalinf_post>
-   miner2-causalinference <miner_causalinference>
-   miner2-riskpredict <miner_riskpredict>
+   miner3-coexpr <miner_coexpr>
+   miner3-mechinf <miner_mechinf>
+   miner3-bcmembers <miner_bcmembers>
+   miner3-subtypes <miner_subtypes>
+   miner3-survival <miner_survival>
+   miner3-causalinf-pre <miner_causalinf_pre>
+   miner3-neo <miner_neo>
+   miner3-causalinf-post <miner_causalinf_post>
+   miner3-causalinference <miner_causalinference>
+   miner3-riskpredict <miner_riskpredict>

@@ -1,20 +1,20 @@
-The miner2-causalinf-post tool
+The miner3-causalinf-post tool
 ==============================
 
 This utility generates results from the output of the miner2-neo utility
 
-You can see the tool's available options when you enter ``miner2-causalinf-post -h``
+You can see the tool's available options when you enter ``miner3-causalinf-post -h``
 at the command prompt:
 
 .. highlight:: none
 
 ::
 
-    usage: miner2-causalinf-post [-h]
+    usage: miner3-causalinf-post [-h]
                                  expfile mapfile eigengenes neoresults datadir
                                  outdir
 
-    miner2-causalinf-post - MINER post-compute causal inference
+    miner3-causalinf-post - MINER post-compute causal inference
 
     positional arguments:
       expfile     input matrix
@@ -31,7 +31,7 @@ at the command prompt:
 Parameters in detail
 --------------------
 
-``miner2-causalinf-post`` expects at least these 6 arguments:
+``miner3-causalinf-post`` expects at least these 6 arguments:
 
   * **expfile:** The gene expression file a matrix in csv format.
   * **mapfile:** The gene identifier map file.

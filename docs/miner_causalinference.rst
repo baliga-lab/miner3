@@ -1,22 +1,22 @@
-The miner2-causalinference tool
+The miner3-causalinference tool
 ===============================
 
 This utility computes causal inference and wiring diagrams without using
 NEO.
 
-You can see the tool's available options when you enter ``miner2-causalinference -h``
+You can see the tool's available options when you enter ``miner3-causalinference -h``
 at the command prompt:
 
 .. highlight:: none
 
 ::
 
-  usage: miner2-causalinference [-h] [--common_mutations COMMON_MUTATIONS]
+  usage: miner3-causalinference [-h] [--common_mutations COMMON_MUTATIONS]
                                 [--translocations TRANSLOCATIONS]
                                 [--cytogenetics CYTOGENETICS]
                                 expfile mapfile coreg coher outdir
 
-  miner-causalinference - MINER causal inference.
+  miner3-causalinference - MINER causal inference.
   MINER Version development (Git SHA 563821013b1f4189d012b54416a7989396d0811d)
 
   positional arguments:
@@ -39,7 +39,7 @@ at the command prompt:
 Parameters in detail
 --------------------
 
-``miner2-causalinference`` expects at least these arguments:
+``miner3-causalinference`` expects at least these arguments:
 
   * **expfile:** The gene expression file a matrix in csv format.
   * **mapfile:** The gene identifier map file.

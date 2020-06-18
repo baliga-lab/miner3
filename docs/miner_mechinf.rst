@@ -1,4 +1,4 @@
-The miner2-mechinf tool
+The miner3-mechinf tool
 =======================
 
 This utility computes the mechanistic inference.
@@ -10,10 +10,10 @@ at the command prompt:
 
 ::
 
-    usage: miner2-mechinf [-h] [-mc MINCORR]
+    usage: miner3-mechinf [-h] [-mc MINCORR]
                           expfile mapfile coexprdict outdir
 
-    miner2-mechinf - MINER compute mechanistic inference
+    miner3-mechinf - MINER compute mechanistic inference
 
     positional arguments:
       expfile               input matrix
@@ -30,7 +30,7 @@ at the command prompt:
 Parameters in detail
 --------------------
 
-``miner2-mechinf`` expects at least these 5 arguments:
+``miner3-mechinf`` expects at least these 5 arguments:
 
   * **expfile:** The gene expression file a matrix in csv format.
   * **mapfile:** The gene identifier map file.
