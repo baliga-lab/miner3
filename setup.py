@@ -4,10 +4,10 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 PACKAGE_DATA = {
-    'miner': ['data/*']
+    'miner': ['data/*', 'data/network_dictionaries/*']
     }
 
-INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas', 'sklearn', 'lifelines',
+INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas==0.25.3', 'sklearn', 'lifelines',
                     'matplotlib', 'seaborn', 'mygene',
                     'pydot', 'graphviz']
 setuptools.setup(
