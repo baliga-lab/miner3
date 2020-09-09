@@ -87,7 +87,7 @@ def fileToReferenceDictionary(filename,dictionaryName,index_col=0):
 # Functions used for pre-processing data
 # =============================================================================
 
-def removeNullRows(df):
+def remove_null_rows(df):
     
     minimum = np.percentile(df,0)
     if minimum == 0:
@@ -446,7 +446,7 @@ def zscore(expressionData):
     print("completed z-transformation.")
     return transform
 
-def correctBatchEffects(df, do_preprocess_tpm):
+def correct_batch_effects(df, do_preprocess_tpm):
 
     zscoredExpression = zscore(df)
     means = []
@@ -464,8 +464,8 @@ def correctBatchEffects(df, do_preprocess_tpm):
 
 def preprocess(filename, mapfile, convert_ids=True, do_preprocess_tpm=True):
     rawExpression = readFileToDf(filename)
-    rawExpressionZeroFiltered = removeNullRows(rawExpression)
-    zscoredExpression = correctBatchEffects(rawExpressionZeroFiltered, do_preprocess_tpm)
+    rawExpressionZeroFiltered = remove_null_rows(rawExpression)
+    zscoredExpression = correct_batch_effects(rawExpressionZeroFiltered, do_preprocess_tpm)
     if convert_ids is True:
         expressionData, conversionTable = identifierConversion(zscoredExpression, mapfile)
         return expressionData, conversionTable
@@ -4051,48 +4051,7 @@ def generateEpigeneticMatrix(epigeneticFilename,expressionData,cutoff_pecentile=
 
     return epigenetic_matrix
 
-"""
-def generateCausalInputs(expressionData,mechanisticOutput,coexpressionModules,saveFolder,mutationFile="filteredMutationsIA12.csv",regulon_dict=None):
-    import os
-    import numpy as np
-    
-    if not os.path.isdir(saveFolder):
-        os.mkdir(saveFolder)
-    
-    # set working directory to results folder
-    os.chdir(saveFolder)
-    # identify the data folder
-    os.chdir(os.path.join("..","data"))
-    dataFolder = os.getcwd()   
-    # write csv files for input into causal inference module
-    os.chdir(os.path.join("..","src"))
-    
-    #bcTfIncidence      
-    bcTfIncidence = biclusterTfIncidence(mechanisticOutput,regulons=regulon_dict)
-    bcTfIncidence.to_csv(os.path.join(saveFolder,"bcTfIncidence.csv"))
-    
-    #eigengenes
-    eigengenes = principalDf(coexpressionModules,expressionData,subkey=None,regulons=regulon_dict,minNumberGenes=1)
-    eigengenes = eigengenes.T
-    index = np.sort(np.array(eigengenes.index).astype(int))
-    eigengenes = eigengenes.loc[index.astype(str),:]
-    eigengenes.to_csv(os.path.join(saveFolder,"eigengenes.csv"))
-    
-    #tfExpression
-    tfExp = tfExpression(expressionData)
-    tfExp.to_csv(os.path.join(saveFolder,"tfExpression.csv"))
-    
-    #filteredMutations:
-    filteredMutations = filterMutations(dataFolder,mutationFile)
-    filteredMutations.to_csv(os.path.join(saveFolder,"filteredMutations.csv"))    
-    
-    #regStratAll
-    tfStratMutations = mutationRegulatorStratification(filteredMutations,tfDf=tfExp,threshold=0.01)                
-    keepers = list(set(np.arange(tfStratMutations.shape[1]))-set(np.where(np.sum(tfStratMutations,axis=0)==0)[0]))
-    tfStratMutations = tfStratMutations.iloc[:,keepers]    
-    tfStratMutations.to_csv(os.path.join(saveFolder,"regStratAll.csv"))
-    
-    return"""
+
 def generateCausalInputs(expressionData,
                          mechanisticOutput,
                          coexpressionModules,
