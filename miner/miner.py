@@ -112,50 +112,6 @@ def remove_null_rows(df):
         filteredDf = df
     return filteredDf
 
-def convertToEnsembl(df,conversionTable,input_format=None):
-
-    # Index Conversion table on ENSG notation
-    conversionTableEnsg = conversionTable.copy()
-    conversionTableEnsg.index = conversionTableEnsg.iloc[:,0]
-
-    # Use Counter to count redundancies in ENSG row
-    ensg = np.array(conversionTableEnsg.iloc[:,0])
-    ensgCount = Counter(ensg)
-    ensgCountMC = ensgCount.most_common()
-
-    # Use Counter results to identify which genes need special conversion
-    special_conversion = np.where(np.vstack(ensgCountMC)[:,1].astype(int)>1)[0]
-    normal_conversion = np.where(np.vstack(ensgCountMC)[:,1].astype(int)==1)[0]
-
-    # Pull out of loop for increased efficiency
-    if input_format is None:
-        input_format = conversionTableEnsg.columns[1]
-
-    index_set = set(df.index)
-
-    # Convert identifiers with >1 alias
-    conversionEnsg = []
-    conversionAffy = []
-    for i in special_conversion:
-        tmp_ensg = ensgCountMC[i][0]
-        tmp_genes = list(set(list(conversionTableEnsg.loc[tmp_ensg,input_format]))&index_set)
-        conv = np.argmax(np.mean(df.loc[tmp_genes,:],axis=1))
-        conversionEnsg.append(tmp_ensg)
-        conversionAffy.append(conv)
-
-    # Convert identifiers with exactly 1 match
-    for j in normal_conversion:
-        tmp_ensg = ensgCountMC[j][0]
-        conv = conversionTableEnsg.loc[tmp_ensg,input_format]
-        conversionEnsg.append(tmp_ensg)
-        conversionAffy.append(conv)
-
-    # Prepare results dataframe
-    conversion_df = pd.DataFrame(conversionEnsg)
-    conversion_df.index = conversionAffy
-    conversion_df.columns = ["Ensembl"]
-
-    return conversion_df
 
 def identifierConversion(expressionData, conversion_table_path):
     idMap = pd.read_csv(conversion_table_path, sep="\t")
@@ -547,66 +503,6 @@ def FrequencyMatrix(matrix,overExpThreshold = 1):
 
     return fm_df
 
-
-def f1Binary(similarityMatrix):
-
-    remainingMembers = set(similarityMatrix.index)
-    # probeSample is the sample that serves as a seed to identify a cluster in a given iteration
-    probeSample = np.argmax(similarityMatrix.sum(axis=1))
-    # members are the samples that satisfy the similarity condition with the previous cluster or probeSample
-    members = set(similarityMatrix.index[np.where(similarityMatrix[probeSample]==1)[0]])
-    # nonMembers are the remaining members not in the current cluster
-    nonMembers = remainingMembers-members
-    # instantiate list to collect clusters of similar members
-    similarityClusters = []
-    # instantiate f1 score for optimization
-    f1 = 0
-
-    for iteration in range(1500):
-
-        predictedMembers = members
-        predictedNonMembers = remainingMembers-predictedMembers
-
-        sumSlice = np.sum(similarityMatrix.loc[:,list(predictedMembers)],axis=1)/float(len(predictedMembers))
-        members = set(similarityMatrix.index[np.where(sumSlice>0.8)[0]])
-
-        if members==predictedMembers:
-            similarityClusters.append(list(predictedMembers))
-            if len(predictedNonMembers)==0:
-                break
-            similarityMatrix = similarityMatrix.loc[predictedNonMembers,predictedNonMembers]
-            probeSample = np.argmax(similarityMatrix.sum(axis=1))
-            members = set(similarityMatrix.index[np.where(similarityMatrix[probeSample]==1)[0]])
-            remainingMembers = predictedNonMembers
-            nonMembers = remainingMembers-members
-            f1 = 0
-            continue
-
-        nonMembers = remainingMembers-members
-        TP = len(members&predictedMembers)
-        FN = len(predictedNonMembers&members)
-        FP = len(predictedMembers&nonMembers)
-        tmpf1 = TP/float(TP+FN+FP)
-
-        if tmpf1 <= f1:
-            similarityClusters.append(list(predictedMembers))
-            if len(predictedNonMembers)==0:
-                break
-            similarityMatrix = similarityMatrix.loc[predictedNonMembers,predictedNonMembers]
-            probeSample = np.argmax(similarityMatrix.sum(axis=1))
-            members = set(similarityMatrix.index[np.where(similarityMatrix[probeSample]==1)[0]])
-            remainingMembers = predictedNonMembers
-            nonMembers = remainingMembers-members
-            f1 = 0
-            continue
-
-        elif tmpf1 > f1:
-            f1 = tmpf1
-            continue
-
-    similarityClusters.sort(key = lambda s: -len(s))
-
-    return similarityClusters
 
 def unmix(df,iterations=25,returnAll=False):
     frequencyClusters = []
@@ -1313,21 +1209,6 @@ def getCoexpressionModules(mechanisticOutput):
         coexpressionModules[i] = genes
     return coexpressionModules
 
-def f1Regulons(coregulationModules,minNumberGenes=5,freqThreshold = 0.1):
-
-    regulons = {}
-    keys = list(coregulationModules.keys())
-    for i in range(len(keys)):
-        tf = keys[i]
-        normDf = coincidenceMatrix(coregulationModules,key=i,freqThreshold = freqThreshold)
-        remixed = f1Binary(normDf)
-        if len(remixed)>0:
-            for cluster in remixed:
-                if len(cluster)>minNumberGenes:
-                    if tf not in list(regulons.keys()):
-                        regulons[tf] = {}
-                    regulons[tf][len(regulons[tf])] = cluster
-    return regulons
 
 # =============================================================================
 # Functions used for post-processing mechanistic inference
