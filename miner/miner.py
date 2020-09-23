@@ -792,7 +792,6 @@ def biclusterMembershipDictionary(revisedClusters,background,label=2,p=0.05):
                 members[key] = []
                 continue
             members[key] = list(background.columns[nonMembers])
-        print("done!")
         return members
 
     if label == "included":
@@ -808,7 +807,6 @@ def biclusterMembershipDictionary(revisedClusters,background,label=2,p=0.05):
                 members[key] = []
                 continue
             members[key] = list(background.columns[included])
-        print("done!")
         return members
 
     members = {}
@@ -824,7 +822,6 @@ def biclusterMembershipDictionary(revisedClusters,background,label=2,p=0.05):
             members[key] = []
             continue
         members[key] = list(background.columns[overExpMembers])
-    print("done!")
     return members
 
 
@@ -1322,7 +1319,8 @@ def f1Decomposition(sampleMembers=None,thresholdSFM=0.333,sampleFrequencyMatrix=
     # remainingMembers is the set of set of unclustered members
     remainingMembers = set(similarityMatrix.index)
     # probeSample is the sample that serves as a seed to identify a cluster in a given iteration
-    probeSample = similarityMatrix.index[np.argmax(np.array(similarityMatrix.sum(axis=1)))]
+    psdf = pd.DataFrame(np.array(similarityMatrix.sum(axis=1)))
+    probeSample = similarityMatrix.index[psdf.idxmax()[0]]
     # members are the samples that satisfy the similarity condition with the previous cluster or probeSample
     members = set(similarityMatrix.index[np.where(similarityMatrix[probeSample]==1)[0]])
     # nonMembers are the remaining members not in the current cluster
@@ -1345,7 +1343,8 @@ def f1Decomposition(sampleMembers=None,thresholdSFM=0.333,sampleFrequencyMatrix=
             if len(predictedNonMembers)==0:
                 break
             similarityMatrix = similarityMatrix.loc[predictedNonMembers,predictedNonMembers]
-            probeSample = np.argmax(similarityMatrix.sum(axis=1))
+
+            probeSample = similarityMatrix.sum(axis=1).idxmax()
             members = set(similarityMatrix.index[np.where(similarityMatrix[probeSample]==1)[0]])
             remainingMembers = predictedNonMembers
             nonMembers = remainingMembers-members
@@ -1363,7 +1362,8 @@ def f1Decomposition(sampleMembers=None,thresholdSFM=0.333,sampleFrequencyMatrix=
             if len(predictedNonMembers)==0:
                 break
             similarityMatrix = similarityMatrix.loc[predictedNonMembers,predictedNonMembers]
-            probeSample = np.argmax(similarityMatrix.sum(axis=1))
+            probeSample = similarityMatrix.sum(axis=1).idxmax()
+
             members = set(similarityMatrix.index[np.where(similarityMatrix[probeSample]==1)[0]])
             remainingMembers = predictedNonMembers
             nonMembers = remainingMembers-members
