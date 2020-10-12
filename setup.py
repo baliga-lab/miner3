@@ -9,7 +9,7 @@ PACKAGE_DATA = {
 
 INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas==0.25.3', 'sklearn', 'lifelines',
                     'matplotlib', 'seaborn', 'mygene',
-                    'pydot', 'graphviz']
+                    'pydot', 'graphviz', 'opentargets']
 setuptools.setup(
     name="isb_miner3",
     version="1.0.0",

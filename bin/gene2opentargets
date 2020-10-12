@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+
+"""
+Standalone opentargets client that retrieves drug information for a list of genes
+"""
+import argparse
+from miner import opentargets
+
+DESCRIPTION = "gene2opentargets - find opentargets data for genes and diseases"
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=DESCRIPTION)
+    parser.add_argument('genes', help="list of genes separated by new lines in EnsEMBL format")
+    parser.add_argument('--disease', action="append", help="disease to filter by", default=[])
+    parser.add_argument('--disease_file', help="disease to filter by", default=None)
+    parser.add_argument('--trial_phase', type=int, help="trial phase for drugs", default=None)
+    parser.add_argument('outdir', help="output directory")
+    args = parser.parse_args()
+    opentargets.drug_info_for_genes(args)
