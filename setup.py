@@ -7,12 +7,12 @@ PACKAGE_DATA = {
     'miner': ['data/*', 'data/network_dictionaries/*']
     }
 
-INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas==0.25.3', 'sklearn', 'lifelines',
+INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas', 'sklearn', 'lifelines',
                     'matplotlib', 'seaborn', 'mygene',
                     'pydot', 'graphviz', 'opentargets']
 setuptools.setup(
     name="isb_miner3",
-    version="1.0.0",
+    version="1.0.1",
     author="Matt Wall",
     author_email="mwall@systemsbiology.org",
     description="MINER analysis tools",
@@ -41,4 +41,5 @@ setuptools.setup(
     scripts=['bin/miner3-coexpr', 'bin/miner3-mechinf',
              'bin/miner3-bcmembers', 'bin/miner3-subtypes',
              'bin/miner3-survival', 'bin/miner3-causalinference', 'bin/miner3-causalinf-pre',
-             'bin/miner3-causalinf-post', 'bin/miner3-neo', 'bin/miner3-riskpredict'])
+             'bin/miner3-causalinf-post', 'bin/miner3-neo', 'bin/miner3-riskpredict',
+             'bin/gene2opentargets', 'bin/drug2opentargets'])
