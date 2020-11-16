@@ -2392,7 +2392,7 @@ def inferSubtypes(referenceMatrix,primaryMatrix,secondaryMatrix,primaryDictionar
 
     t1 = time.time()
 
-    print('Beginning subtype inference')
+    logging.info('Beginning subtype inference')
     if restricted_index is not None:
         referenceMatrix = referenceMatrix.loc[restricted_index,:]
         primaryMatrix = primaryMatrix.loc[restricted_index,:]
@@ -2462,7 +2462,7 @@ def inferSubtypes(referenceMatrix,primaryMatrix,secondaryMatrix,primaryDictionar
             subcentroidClusters.append(tmp_centroidClusters[ccc])
 
     t2 = time.time()
-    print("completed subtype inference in {:.2f} minutes".format((t2-t1)/60.))
+    logging.info("completed subtype inference in {:.2f} minutes".format((t2-t1)/60.))
     return subcentroidClusters, centroidClusters
 
 
