@@ -1038,6 +1038,8 @@ def axisTfs(axesDf,tfList,expressionData,correlationThreshold=0.3):
     for axis in range(axesArray.shape[0]):
         tfDict_key = axes[axis]
         tfCorrelation = pearson_array(tfArray,axesArray[axis,:])
+        # This comparison throws a RuntimeWarning if tfCorrelation contains
+        # nan's. Ignoring them for now.
         tfDict[tfDict_key] = tfs[np.where(np.abs(tfCorrelation)>=correlationThreshold)[0]]
 
     return tfDict
