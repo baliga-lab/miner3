@@ -38,6 +38,7 @@ import json
 import time
 import warnings
 import os
+import logging
 
 
 # =============================================================================
@@ -170,14 +171,14 @@ def identifierConversion(expressionData, conversion_table_path):
         corrections.append(firstChoice)
 
     if len(corrections)  == 0:
-        print("completed identifier conversion.\n"+str(convertedData.shape[0])+" genes were converted." )
+        logging.info("completed identifier conversion, " + str(convertedData.shape[0]) + " genes were converted." )
         return convertedData, conversionTable
 
     correctionsDf = pd.concat(corrections,axis=0)
     uncorrectedData = convertedData.loc[singles,:]
     convertedData = pd.concat([uncorrectedData,correctionsDf],axis=0)
 
-    print("completed identifier conversion.\n"+str(convertedData.shape[0])+" genes were converted." )
+    logging.info("completed identifier conversion, " + str(convertedData.shape[0]) + " genes were converted." )
     return convertedData, conversionTable
 
 def readExpressionFromGZipFiles(directory):
@@ -654,7 +655,7 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
     for step in range(maxStep):
         trial+=1
         progress = (100./maxStep)*trial
-        print('{:.2f} percent complete'.format(progress))
+        logging.info('{:.2f} percent complete'.format(progress))
         genesMapped = []
         bestMapped = []
 
@@ -712,7 +713,7 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
     bestHits.sort(key=lambda s: -len(s))
 
     stopTimer = time.time()
-    print('\ncoexpression clustering completed in {:.2f} minutes'.format((stopTimer-startTimer)/60.))
+    logging.info('coexpression clustering completed in {:.2f} minutes'.format((stopTimer-startTimer)/60.))
 
     return bestHits
 
@@ -777,8 +778,10 @@ def filterCoexpressionDict(coexpressionDict,clusterScores,threshold=0.01):
 
 
 def biclusterMembershipDictionary(revisedClusters,background,label=2,p=0.05):
-
+    """This is a very suspicious function !!!!"""
     background_genes = set(background.index)
+    """WW: textual labels are never used !!!! we should remove that because it's just
+    confusing"""
     if label == "excluded":
         members = {}
         for key in list(revisedClusters.keys()):

@@ -53,7 +53,8 @@ def plot_expression_stats(exp_data, outdir):
 
 
 if __name__ == '__main__':
-    logging.getLogger('matplotlib.font_manager').disabled = True
+    mpl_logger = logging.getLogger('matplotlib')
+    mpl_logger.setLevel(logging.WARNING)
 
     LOG_FORMAT = '%(asctime)s %(message)s'
     logging.basicConfig(format=LOG_FORMAT, level=logging.DEBUG,
