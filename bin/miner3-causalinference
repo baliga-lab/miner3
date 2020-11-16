@@ -109,7 +109,7 @@ if __name__ == '__main__':
         os.mkdir(result_dir)
 
     if args.common_mutations is not None:
-        print('causal network analysis for common mutations')
+        logging.info('causal network analysis for common mutations')
         common_mutations = pd.read_csv(args.common_mutations, index_col=0, header=0)
         miner.causalNetworkAnalysis(regulon_matrix=regulon_df,
                                     expression_matrix=exp_data,
@@ -121,7 +121,7 @@ if __name__ == '__main__':
                                     causalFolder="causal_results_common_mutations")
 
     if args.translocations is not None:
-        print('causal network analysis for translocations')
+        logging.info('causal network analysis for translocations')
         translocations = pd.read_csv(args.translocations, index_col=0, header=0)
         miner.causalNetworkAnalysis(regulon_matrix=regulon_df,
                                     expression_matrix=exp_data,
@@ -133,7 +133,7 @@ if __name__ == '__main__':
                                     causalFolder="causal_results_translocations")
 
     if args.cytogenetics is not None:
-        print('causal network analysis for cytogenetics')
+        logging.info('causal network analysis for cytogenetics')
         cytogenetics = pd.read_csv(args.cytogenetics, index_col=0, header=0)
         miner.causalNetworkAnalysis(regulon_matrix=regulon_df,
                                     expression_matrix=exp_data,

@@ -85,7 +85,7 @@ def fileToReferenceDictionary(filename,dictionaryName,index_col=0):
     read_reference_db = pd.read_csv(filename,index_col=0,header=0)
     if list(read_reference_db.iloc[:,0]) == range(len(read_reference_db.iloc[:,0])):
         read_reference_db = read_reference_db.iloc[:,1:]
-        print("deleted")
+        logging.info("deleted")
     read_reference_db.index = read_reference_db.iloc[:,0]
     read_reference_db = read_reference_db.iloc[:,1:]
     read_reference_db.head()
@@ -143,7 +143,7 @@ def identifierConversion(expressionData, conversion_table_path):
     subset.index = subset.iloc[:,1]
 
     if len(bestMatch) == 0:
-        print("Error: Gene identifiers not recognized")
+        logging.warn("Error: Gene identifiers not recognized")
 
     if state == "transpose":
         expressionData = expressionData.T
@@ -402,7 +402,7 @@ def zscore(expressionData):
     except:
         passIndex = np.where(stds>0)[0]
         transform = ((expressionData.iloc[passIndex,:].T - means[passIndex])/stds[passIndex]).T
-    print("completed z-transformation.")
+    logging.info("completed z-transformation.")
     return transform
 
 def correct_batch_effects(df, do_preprocess_tpm):
@@ -943,7 +943,7 @@ def regulonExpansion(task):
     for gene in list(set(list(tfbsdbGenes.keys()))&set(expressionData.index))[start:stop]:
         ct+=1
         if ct%1000 == 0:
-            print("Completed {:d} of {:d} iterations".format(ct,stop-start))
+            logging.info("Completed {:d} of {:d} iterations".format(ct,stop-start))
         pa = pearson_array(eigenarray,np.array(expressionData.loc[gene,:]))
         tfbs = tfbsdbGenes[gene]
         hits = np.where(pa>corrThreshold)[0]
@@ -1776,7 +1776,7 @@ def cluster_features(dfr,clusterList,minClusterSize_x = 5,minClusterSize_y = 5,
     extracted_lists
 
     t2 = time.time()
-    print("Completed clustering in {:.2f} minutes".format(float(t2-t1)/60))
+    logging.info("Completed clustering in {:.2f} minutes".format(float(t2-t1)/60))
 
     return extracted_lists, y_clusters
 
@@ -1852,7 +1852,7 @@ def univariate_comparison(subtypes,srv,expressionData,network_activity_diff,n_it
 
     # Define subtype of patients
     for name in subtypes.keys():
-        print("Iterating subtype "+name)
+        logging.info("Iterating subtype " + name)
         # Define subtype patients
         subtype = subtypes[name]
 
@@ -2115,7 +2115,7 @@ def optimize_threshold(most_predictive_gene,ordered_patients,network_activity_di
         f1_tmp = f1(y_true,np.array(np.array(network_activity_diff.loc[most_predictive_gene,ordered_patients])>thr).astype(int))
         opt_thr.append(f1_tmp)
 
-    print("F1 score: {:.2f}".format(max(opt_thr)))
+    logging.info("F1 score: {:.2f}".format(max(opt_thr)))
 
     threshold = np.arange(-1,1,0.01)[np.argsort(np.array(opt_thr))[-1]]
     return threshold
@@ -2152,7 +2152,7 @@ def optimize_parameters_ridge(x,y,names,srv,n_iter=10,show=True,results_director
     for ar in range(len(ranges)):
         a_range = ranges[ar]
 
-        print("Iteration {:d} of {:d}".format(ar+1,len(ranges)))
+        logging.info("Iteration {:d} of {:d}".format(ar+1,len(ranges)))
         all_curves = []
         for iteration in range(n_iter):
             train_test_dict = train_test(x,y,names)
@@ -2199,7 +2199,7 @@ def optimize_parameters_ridge(x,y,names,srv,n_iter=10,show=True,results_director
         if results_directory is not None:
             plt.savefig(os.path.join(results_directory,"Ridge_parameter_optimization.pdf"),bbox_inches="tight")
 
-    print("Optimized parameter: a = {:.3f}\nMean AUC with optimized parameter: {:.3f}".format(par_opt,max_max))
+    logging.info("Optimized parameter: a = {:.3f}\nMean AUC with optimized parameter: {:.3f}".format(par_opt,max_max))
     return par_opt, max_max, means, stds
 
 def ridge(x,y,names,lambda_min,srv,n_iter = 100,plot_label = "Ridge",results_directory = None):
@@ -2209,7 +2209,7 @@ def ridge(x,y,names,lambda_min,srv,n_iter = 100,plot_label = "Ridge",results_dir
     aucs = []
     for iteration in range(n_iter):
         if iteration%50 == 0:
-            print("Iteration {:d} of {:d}".format(iteration,n_iter))
+            logging.info("Iteration {:d} of {:d}".format(iteration,n_iter))
         train_test_dict = train_test(x,y,names)
         X = train_test_dict["x_train"].T
         y_gs = np.array(srv.loc[train_test_dict["names_train"],"GuanScore"])
@@ -2368,7 +2368,7 @@ def getStratifyingRegulons(states_list_1,states_list_2,reference_matrix,p=0.05,p
     ttest = stats.ttest_ind(matrix1,matrix2,axis=1,equal_var=False)
 
     if min(ttest[1]) > p:
-        print("No hits detected. Cutoff p-value is too strict")
+        logging.info("No hits detected. Cutoff p-value is too strict")
         return []
 
     results = pd.DataFrame(np.vstack(ttest).T)
@@ -2376,7 +2376,7 @@ def getStratifyingRegulons(states_list_1,states_list_2,reference_matrix,p=0.05,p
     results.columns = ["t-statistic","p-value"]
     results = results[results["p-value"]<=p]
     results.sort_values(by="t-statistic",ascending=False,inplace=True)
-    print(results)
+    #print(results)
 
     if plot is True:
         ttest_data_source = reference_matrix.loc[results.index,np.hstack([np.hstack(states_list_1),np.hstack(states_list_2)])]
@@ -2403,7 +2403,7 @@ def inferSubtypes(referenceMatrix,primaryMatrix,secondaryMatrix,primaryDictionar
     similarityClusters = [list(set(cluster)&set(referenceMatrix.columns)) for cluster in similarityClusters]
     initialClasses = [i for i in similarityClusters if len(i)>4]
     if len(initialClasses)==0:
-        print('No subtypes were detected')
+        logging.info('No subtypes were detected')
 
     # expand initial subtype clusters
     centroidClusters, centroidMatrix = centroidExpansion(initialClasses,primaryMatrix,f1Threshold = 0.1,returnCentroids=True) #0.3
@@ -2507,7 +2507,7 @@ def parallelEnrichment(task):
 
 def enrichmentAnalysis(dict_,reference_dict,reciprocal_dict,genes_with_expression,resultsDirectory,numCores=5,min_overlap = 3,threshold = 0.05):
     t1 = time.time()
-    print('initializing enrichment analysis')
+    logging.info('initializing enrichment analysis')
 
     os.chdir(os.path.join(resultsDirectory,"..","data","network_dictionaries"))
     reference_dict = read_pkl(reference_dict)
@@ -2541,7 +2541,7 @@ def enrichmentAnalysis(dict_,reference_dict,reciprocal_dict,genes_with_expressio
         combinedResults = {}
 
     t2 = time.time()
-    print('completed enrichment analysis in {:.2f} seconds'.format(t2-t1))
+    logging.info('completed enrichment analysis in {:.2f} seconds'.format(t2-t1))
 
     return combinedResults
 
@@ -2735,8 +2735,8 @@ def survivalMedianAnalysis(task):
     cox_keys = []
     keys = list(referenceDictionary.keys())[start:stop]
     for i in range(len(keys)):
-        if i%100==0:
-            print("Completed {:d} of {:d} iterations".format(i,len(keys)))
+        if i % 100 == 0:
+            logging.info("Completed {:d} of {:d} iterations".format(i,len(keys)))
         key = keys[i]
         cluster = np.array(expressionData.loc[referenceDictionary[key],sorted_patients])
         median_ = np.mean(cluster,axis=0)
@@ -2773,7 +2773,7 @@ def survivalMembershipAnalysis(task):
 
     overlapPatients = list(set(membershipDf.columns)&set(SurvivalDf.index))
     if len(overlapPatients) == 0:
-        print("samples are not represented in the survival data")
+        logging.info("samples are not represented in the survival data")
         return
     Survival = SurvivalDf.loc[overlapPatients,SurvivalDf.columns[0:2]]
 
@@ -2782,8 +2782,8 @@ def survivalMembershipAnalysis(task):
     ct=0
     for key in keys:
         ct+=1
-        if ct%100==0:
-            print("completed {:d} iterations on thread".format(ct))
+        if ct % 100 == 0:
+            logging.info("completed {:d} iterations on thread".format(ct))
         try:
             memberVector = pd.DataFrame(membershipDf.loc[key,overlapPatients])
             Survival2 = pd.concat([Survival,memberVector],axis=1)
@@ -3143,7 +3143,7 @@ def causalNetworkAnalysis(regulon_matrix,expression_matrix,reference_matrix,muta
         causal_output.to_csv(os.path.join(causal_path,output_file))
 
     t2 = time.time()
-    print('completed causal analysis in {:.2f} minutes'.format((t2-t1)/60.))
+    logging.info('completed causal analysis in {:.2f} minutes'.format((t2-t1)/60.))
 
 def causalNetworkImpact(target_genes,regulon_matrix,expression_matrix,reference_matrix,mutation_matrix,resultsDirectory,minRegulons=1,significance_threshold=0.05,causalFolder="causal_results",return_df=False,tag=None):
     # create results directory
@@ -3435,7 +3435,7 @@ def parallelCausalNetworkAnalysis(regulon_matrix,expression_matrix,reference_mat
     multiprocess(causalNetworkAnalysisTask,tasks)
 
     t2 = time.time()
-    print('completed causal analysis in {:.2f} minutes'.format((t2-t1)/60.))
+    logging.info('completed causal analysis in {:.2f} minutes'.format((t2-t1)/60.))
 
 
 def wiringDiagram(causal_results,regulonModules,coherent_samples_matrix,include_genes=False,savefile=None):
@@ -3714,7 +3714,7 @@ def analyzeCausalResults(task):
     for bc in keys:
         ct+=1
         if ct%10 == 0:
-            print(ct)
+            logging.info(ct)
         postProcessed[bc] = {}
         for tf in list(preProcessedCausalResults[bc].keys()):
             for mutation in preProcessedCausalResults[bc][tf]:
@@ -3793,7 +3793,7 @@ def causalMechanisticNetworkDictionary(postProcessedCausalAnalysis,biclusterRegu
     for key in list(postProcessedCausalAnalysis.keys()):
         ct += 1
         if ct%10==0:
-            print(ct)
+            logging.info(ct)
         lines = []
         regs = postProcessedCausalAnalysis[key].keys()
         for reg in regs:
@@ -4045,7 +4045,7 @@ def plotRiskStratification(lbls,mtrx,srv,survival_tag,resultsDirectory=None):
     pre_cox.head(5)
 
     cox_dict = parallelMemberSurvivalAnalysis(membershipDf = pre_cox,numCores=1,survivalPath="",survivalData=srv)
-    print('Risk stratification of '+survival_tag+' has Hazard Ratio of {:.2f}'.format(cox_dict['High-risk'][0]))
+    logging.info('Risk stratification of '+survival_tag+' has Hazard Ratio of {:.2f}'.format(cox_dict['High-risk'][0]))
 
     if resultsDirectory is not None:
         plotName = os.path.join(resultsDirectory,kmFilename)
@@ -4124,7 +4124,7 @@ def iAUC(srv,mtrx,classifier,plot_all=False):
 
     integrated_auc = np.mean(aucs)
 
-    print('classifier has integrated AUC of {:.3f}'.format(integrated_auc))
+    logging.info('classifier has integrated AUC of {:.3f}'.format(integrated_auc))
 
     tpr_stds = np.std(np.vstack(tpr_list),axis=0)
     tpr_means = np.mean(np.vstack(tpr_list),axis=0)
@@ -4395,7 +4395,7 @@ def generatePredictor(membership_datasets,survival_datasets,dataset_labels,itera
                 mean_hr = np.mean(hrs)
                 mean_aucs.append(mean_auc)
                 mean_hrs.append(mean_hr)
-                print(rs,mean_auc,mean_hr)
+                logging.info(rs,mean_auc,mean_hr)
             elif test_only is False:
                 scores = []
                 hrs = []
@@ -4420,7 +4420,7 @@ def generatePredictor(membership_datasets,survival_datasets,dataset_labels,itera
                 mean_hr = np.mean(hrs)
                 mean_aucs.append(mean_auc)
                 mean_hrs.append(mean_hr)
-                print(rs,mean_auc,mean_hr)
+                #print(rs, mean_auc, mean_hr)
 
         if metric == 'roc_auc':
             best_state = np.argsort(np.array(mean_aucs))[-1]
@@ -4478,7 +4478,7 @@ def generatePredictor(membership_datasets,survival_datasets,dataset_labels,itera
         mean_hrs.append(mean_hr)
         precision_matrix = np.vstack(prec)
         recall_matrix = np.vstack(rec)
-        print(best_state,mean_auc,mean_hr)
+        #print(best_state,mean_auc,mean_hr)
 
     elif test_only is False:
         scores = []
@@ -4508,7 +4508,7 @@ def generatePredictor(membership_datasets,survival_datasets,dataset_labels,itera
         mean_hrs.append(mean_hr)
         precision_matrix = np.vstack(prec)
         recall_matrix = np.vstack(rec)
-        print(best_state,mean_auc,mean_hr)
+        #print(best_state,mean_auc,mean_hr)
 
     train_predictions = []
     test_predictions = []
@@ -4530,7 +4530,7 @@ def generatePredictor(membership_datasets,survival_datasets,dataset_labels,itera
             lbls = predictions[j]
 
             percent_classified_hr = 100*sum(lbls)/float(len(lbls))
-            print('classified {:.1f} percent of population as high-risk'.format(percent_classified_hr))
+            logging.info('classified {:.1f} percent of population as high-risk'.format(percent_classified_hr))
 
             aucs, cutoffs, tpr_list, fpr_list, hazard_ratio, prec, rec = riskStratification(lbls,mtrx,guan_srv,survival_tag,clf,guan_rank=False,resultsDirectory=None,plot_all=False,plot_any=True)
             if output_directory is not None:
@@ -4545,7 +4545,7 @@ def generatePredictor(membership_datasets,survival_datasets,dataset_labels,itera
             lbls = train_predictions[j]
 
             percent_classified_hr = 100*sum(lbls)/float(len(lbls))
-            print('classified {:.1f} percent of training population as high-risk'.format(percent_classified_hr))
+            logging.info('classified {:.1f} percent of training population as high-risk'.format(percent_classified_hr))
 
             aucs, cutoffs, tpr_list, fpr_list, hazard_ratio, prec, rec = riskStratification(lbls,mtrx,guan_srv,survival_tag,clf,guan_rank=False,resultsDirectory=None,plot_all=False,plot_any=True)
             if output_directory is not None:
@@ -4555,7 +4555,7 @@ def generatePredictor(membership_datasets,survival_datasets,dataset_labels,itera
             lbls = test_predictions[j]
 
             percent_classified_hr = 100*sum(lbls)/float(len(lbls))
-            print('classified {:.1f} percent of test population as high-risk'.format(percent_classified_hr))
+            logging.info('classified {:.1f} percent of test population as high-risk'.format(percent_classified_hr))
 
             aucs, cutoffs, tpr_list, fpr_list, hazard_ratio, prec, rec = riskStratification(lbls,mtrx,guan_srv,survival_tag,clf,guan_rank=False,resultsDirectory=None,plot_all=False,plot_any=True)
             if output_directory is not None:
@@ -4572,7 +4572,7 @@ def generatePredictor(membership_datasets,survival_datasets,dataset_labels,itera
         class0.append(tmp_class_0)
         class1.append(tmp_class_1)
 
-    print(best_state)
+    logging.info(best_state)
 
     if best_state is not None:
         return clf, class0, class1, mean_aucs, mean_hrs, pct_labeled, precision_matrix, recall_matrix
@@ -4659,7 +4659,7 @@ def differentialActivity(regulon_matrix,reference_matrix,baseline_patients,relap
 
     t2 = time.time()
 
-    print('completed in {:.2f} minutes'.format((t2-t1)/60.))
+    logging.info('completed in {:.2f} minutes'.format((t2-t1)/60.))
 
     insigvoldata_patients = volcano_data_.index[volcano_data_["-log10(p)"]<=-np.log10(0.05)]
     sigvoldata_patients = volcano_data_.index[volcano_data_["-log10(p)"]>-np.log10(0.05)]
@@ -4689,7 +4689,7 @@ def differentialActivity(regulon_matrix,reference_matrix,baseline_patients,relap
         if savefile is not None:
             plt.savefig(savefile,bbox_inches="tight")
     except:
-        print('Error: Analysis was successful, but could not generate plot')
+        logging.warn('Error: Analysis was successful, but could not generate plot')
 
     return volcano_data_
 
