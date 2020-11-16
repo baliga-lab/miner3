@@ -1020,7 +1020,7 @@ def principalDf(dict_,expressionData,regulons=None,subkey='genes',minNumberGenes
 def axisTfs(axesDf,tfList,expressionData,correlationThreshold=0.3):
     axesArray = np.array(axesDf.T)
     if correlationThreshold > 0:
-        tfArray = np.array(expressionData.loc[tfList,:])
+        tfArray = np.array(expressionData.reindex(tfList))
     axes = np.array(axesDf.columns)
     tfDict = {}
 
@@ -1136,7 +1136,7 @@ def tfbsdbEnrichment(task):
     return clusterTfs
 
 def mechanisticInference(axes,revisedClusters,expressionData,correlationThreshold=0.3,numCores=5,p=0.05, database_path=None):
-    print('Running mechanistic inference')
+    logging.info('Running mechanistic inference')
     tfToGenes = read_pkl(database_path)
 
     if correlationThreshold <= 0:
