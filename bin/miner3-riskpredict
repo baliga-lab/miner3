@@ -116,10 +116,11 @@ if __name__ == '__main__':
     cox_regulons_output.to_csv(os.path.join(args.outdir, 'CoxProportionalHazardsRegulons.csv'))
     cox_regulons_output.sort_values(by="HR", ascending=False, inplace=True)
 
+    """
     print("\nHigh-risk programs:")
     print(cox_regulons_output.iloc[0:5,:])
     print("\nLow-risk programs")
-    print(cox_regulons_output.iloc[-5:,:])
+    print(cox_regulons_output.iloc[-5:,:])"""
 
     # Survival analysis of transcriptional programs
     # Create dictionary of program genes
@@ -140,10 +141,11 @@ if __name__ == '__main__':
                                             'CoxProportionalHazardsPrograms.csv'))
     cox_programs_output.sort_values(by="HR", ascending=False, inplace=True)
 
+    """
     print("\nHigh-risk programs:")
     print(cox_programs_output.iloc[0:5,:])
     print("\nLow-risk programs")
-    print(cox_programs_output.iloc[-5:,:])
+    print(cox_programs_output.iloc[-5:,:])"""
 
     # Kaplan-Meier plot of all programs (median expression)
     srv = guanSurvivalDfMMRF.copy()
