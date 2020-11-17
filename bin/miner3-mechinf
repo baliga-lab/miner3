@@ -40,6 +40,8 @@ if __name__ == '__main__':
                         help="minimum correlation")
     parser.add_argument('--skip_tpm', action="store_true",
                         help="overexpression threshold")
+    parser.add_argument('--firmout', default='miner_exported_regulons.sgn',
+                        help='file name for FIRM input file, will be stored in outdir')
 
     args = parser.parse_args()
 
@@ -99,6 +101,11 @@ if __name__ == '__main__':
 
     # reformat regulon dictionary for consistency with revisedClusters and coexpressionModules
     regulon_modules, regulon_df = miner.regulonDictionary(regulons)
+    with open(os.path.join(args.outdir, args.firmout), 'w') as outfile:
+        outfile.write('Gene\tGroup\n')
+        for regulon, genes in regulon_modules.items():
+            for gene in genes:
+                outfile.write('%s\t%s\n' % (gene, regulon))
 
     # write regulons to json file
     with open(os.path.join(args.outdir, "regulons.json"), 'w') as outfile:
