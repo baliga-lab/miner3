@@ -42,6 +42,8 @@ if __name__ == '__main__':
                         help="overexpression threshold")
     parser.add_argument('--firmout', default='miner_exported_regulons.sgn',
                         help='file name for FIRM input file, will be stored in outdir')
+    parser.add_argument('--genelist', default='all_genes.txt',
+                        help='file name for the gene file, will be stored in outdir')
 
     args = parser.parse_args()
 
@@ -101,11 +103,22 @@ if __name__ == '__main__':
 
     # reformat regulon dictionary for consistency with revisedClusters and coexpressionModules
     regulon_modules, regulon_df = miner.regulonDictionary(regulons)
+
+    # FIRM export: note that we do not check whether we have RefSeq or Entrez, maybe this should be
+    # checked in the glue
     with open(os.path.join(args.outdir, args.firmout), 'w') as outfile:
         outfile.write('Gene\tGroup\n')
         for regulon, genes in regulon_modules.items():
             for gene in genes:
                 outfile.write('%s\t%s\n' % (gene, regulon))
+
+    # OpenTargets export
+    with open(os.path.join(args.outdir, args.genelist), 'w') as outfile:
+        all_genes = set()
+        for regulon, genes in regulon_modules.items():
+            all_genes.update(genes)
+        for gene in sorted(all_genes):
+            outfile.write('%s\n' % gene)
 
     # write regulons to json file
     with open(os.path.join(args.outdir, "regulons.json"), 'w') as outfile:
