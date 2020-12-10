@@ -137,12 +137,6 @@ if __name__ == '__main__':
         json.dump(revised_clusters, outfile)
 
     """
-    # reconvert results into original annotations
-    regulon_annotated_df = mechanistic_inference.convert_regulons(regulon_df, conv_table)
-
-    # write annotated regulon table to .csv
-    regulon_annotated_df.to_csv(os.path.join(args.outdir, "regulons_annotated.csv"))
-
     # write annotated regulons to .json file
     with open(os.path.join(args.outdir, "regulons_annotated.json"), 'w') as outfile:
         json.dump(regulons, outfile)

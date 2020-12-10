@@ -1186,18 +1186,18 @@ def getCoregulationModules(mechanisticOutput):
 
 
 #Changed > to >= in minNumberGenes
-def getRegulons(coregulationModules,minNumberGenes=5,freqThreshold = 0.333):
-
+def getRegulons(coregulationModules, minNumberGenes=5, freqThreshold=0.333):
+    """Returns dictionary: {<tf>: {<regulon_id>: [<genes>]}}
+    """
     regulons = {}
-    keys = list(coregulationModules.keys())
-    for i in range(len(keys)):
-        tf = keys[i]
-        normDf = coincidenceMatrix(coregulationModules,key=i,freqThreshold = freqThreshold)
+    keys = sorted(coregulationModules.keys())
+    for i, tf in enumerate(keys):
+        normDf = coincidenceMatrix(coregulationModules, key=i, freqThreshold=freqThreshold)
         unmixed = unmix(normDf)
         remixed = remix(normDf,unmixed)
-        if len(remixed)>0:
+        if len(remixed) > 0:
             for cluster in remixed:
-                if len(cluster)>=minNumberGenes:
+                if len(cluster) >= minNumberGenes:
                     if tf not in list(regulons.keys()):
                         regulons[tf] = {}
                     regulons[tf][len(regulons[tf])] = cluster
@@ -1227,23 +1227,6 @@ def convertDictionary(dict_,conversionTable):
         converted[i] = list(conv_genes)
     return converted
 
-def convertRegulons(df,conversionTable):
-    regIds = []
-    regs = []
-    genes = []
-    for i in range(df.shape[0]):
-        regIds.append(df.iloc[i,0])
-        tmpReg = conversionTable[df.iloc[i,1]]
-        if type(tmpReg) is pd.core.series.Series:
-            tmpReg=tmpReg[0]
-        regs.append(tmpReg)
-        tmpGene = conversionTable[df.iloc[i,2]]
-        if type(tmpGene) is pd.core.series.Series:
-            tmpGene = tmpGene[0]
-        genes.append(tmpGene)
-    regulonDfConverted = pd.DataFrame(np.vstack([regIds,regs,genes]).T)
-    regulonDfConverted.columns = ["Regulon_ID","Regulator","Gene"]
-    return regulonDfConverted
 
 def generateInputForFIRM(revisedClusters,saveFile):
 
@@ -2950,7 +2933,10 @@ def combinedStates(groups,ranked_groups,survivalDf,minSamples=4,maxStates=7):
 # Functions used for causal inference
 # =============================================================================
 
-def causalNetworkAnalysis(regulon_matrix,expression_matrix,reference_matrix,mutation_matrix,resultsDirectory,minRegulons=1,significance_threshold=0.05,causalFolder="causal_results"):
+def causalNetworkAnalysis(regulon_matrix,expression_matrix,reference_matrix,mutation_matrix,
+                          resultsDirectory,minRegulons=1,
+                          significance_threshold=0.05,
+                          causalFolder="causal_results"):
     if not os.path.isdir(resultsDirectory):
         os.mkdir(resultsDirectory)
     # create results directory
