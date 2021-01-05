@@ -26,7 +26,7 @@ MINER Version %s (Git SHA %s)""" % (str(MINER_VERSION).replace('miner3 ', ''),
 
 def plot_expression_stats(exp_data, outdir):
     plt.figure()
-    ind_exp_data = [exp_data.iloc[:,i] for i in range(50)]
+    ind_exp_data = [exp_data.iloc[:,i] for i in range(len(exp_data.columns))]
     _ = plt.boxplot(ind_exp_data)
     plt.title("Patient expression profiles",FontSize=14)
     plt.ylabel("Relative expression",FontSize=14)

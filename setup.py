@@ -12,7 +12,7 @@ INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas', 'sklearn', 'lifelines',
                     'pydot', 'graphviz', 'opentargets']
 setuptools.setup(
     name="isb_miner3",
-    version="1.0.1",
+    version="1.0.2",
     author="Matt Wall",
     author_email="mwall@systemsbiology.org",
     description="MINER analysis tools",
