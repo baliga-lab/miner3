@@ -39,6 +39,7 @@ import time
 import warnings
 import os
 import logging
+import traceback
 
 
 # =============================================================================
@@ -2989,6 +2990,12 @@ def causalNetworkAnalysis(regulon_matrix,expression_matrix,reference_matrix,muta
         phenotype_1 = list(set(mutation_matrix.columns)-set(phenotype_2))
         phenotype_2 = list(set(phenotype_2)&set(reference_matrix.columns))
         phenotype_1 = list(set(phenotype_1)&set(reference_matrix.columns))
+
+        # so the problem is that phenotype_2 can be empty, which is the case when
+        # the filter condition yields an empty result for the mutation
+        if len(phenotype_2) == 0:
+            print("no results for mutation '%s' - skipping." % mutation_name)
+            continue
 
         regulon_ttests = pd.DataFrame(
             np.vstack(
