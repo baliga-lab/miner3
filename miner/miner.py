@@ -617,7 +617,7 @@ def combineClusters(axes,clusters,threshold=0.925):
 
 def reconstruction(decomposedList,expressionData,threshold=0.925):
     if len(decomposedList) == 0:
-        return decomposedList
+        return {}  # decomposedList
     if type(decomposedList[0]) is not list:
         if type(decomposedList[0]) is not np.ndarray:
             return decomposedList
@@ -3433,52 +3433,65 @@ def parallelCausalNetworkAnalysis(regulon_matrix,expression_matrix,reference_mat
 
 def wiringDiagram(causal_results,regulonModules,coherent_samples_matrix,include_genes=False,savefile=None):
     cytoscape_output = []
-    for regulon in list(set(causal_results.index)):
 
+    #####
+    # the weirdest thing is that the input keys are possibly not consistently typed !!!!
+    # This conversion is a hack to make the keys uniform integer
+    valid_regulons = list(set([int(r) for r in causal_results.index]).intersection(set(coherent_samples_matrix.index)))
+    new_regulon_modules = {int(regulon): module for regulon, module in regulonModules.items()}
+    regulonModules = new_regulon_modules
+    #########
+    #for regulon in list(set(causal_results.index)):
+    for regulon in valid_regulons:
         genes = regulonModules[regulon]
         samples = coherent_samples_matrix.columns[coherent_samples_matrix.loc[int(regulon),:]==1]
         condensed_genes = (";").join(genes)
         condensed_samples = (";").join(samples)
-        causal_info = causal_results.loc[regulon,:]
-        if type(causal_info) is pd.core.frame.DataFrame:
-            for i in range(causal_info.shape[0]):
-                mutation = causal_info.iloc[i,0]
-                reg = causal_info.iloc[i,1]
-                tmp_edge1 = causal_info.iloc[i,3]
-                if tmp_edge1 >0:
-                    edge1 = "up-regulates"
-                elif tmp_edge1 <0:
-                    edge1 = "down-regulates"
-                tmp_edge2 = causal_info.iloc[i,5]
-                if tmp_edge2 >0:
-                    edge2 = "activates"
-                elif tmp_edge2 <0:
-                    edge2 = "represses"
+        try:
+            causal_info = causal_results.loc[regulon,:]
+            if type(causal_info) is pd.core.frame.DataFrame:
+                for i in range(causal_info.shape[0]):
+                    mutation = causal_info.iloc[i,0]
+                    reg = causal_info.iloc[i,1]
+                    tmp_edge1 = causal_info.iloc[i,3]
+                    if tmp_edge1 >0:
+                        edge1 = "up-regulates"
+                    elif tmp_edge1 <0:
+                        edge1 = "down-regulates"
+                    tmp_edge2 = causal_info.iloc[i,5]
+                    if tmp_edge2 >0:
+                        edge2 = "activates"
+                    elif tmp_edge2 <0:
+                        edge2 = "represses"
 
-                if include_genes is True:
-                    cytoscape_output.append([mutation,edge1,reg,edge2,regulon,condensed_genes,condensed_samples])
-                elif include_genes is False:
-                    cytoscape_output.append([mutation,edge1,reg,edge2,regulon])
+                    if include_genes is True:
+                        cytoscape_output.append([mutation,edge1,reg,edge2,regulon,condensed_genes,condensed_samples])
+                    elif include_genes is False:
+                        cytoscape_output.append([mutation,edge1,reg,edge2,regulon])
 
-        elif type(causal_info) is pd.core.series.Series:
-            for i in range(causal_info.shape[0]):
-                mutation = causal_info[0]
-                reg = causal_info[1]
-                tmp_edge1 = causal_info[3]
-                if tmp_edge1 >0:
-                    edge1 = "up-regulates"
-                elif tmp_edge1 <0:
-                    edge1 = "down-regulates"
-                tmp_edge2 = causal_info[5]
-                if tmp_edge2 >0:
-                    edge2 = "activates"
-                elif tmp_edge2 <0:
-                    edge2 = "represses"
+            elif type(causal_info) is pd.core.series.Series:
+                for i in range(causal_info.shape[0]):
+                    mutation = causal_info[0]
+                    reg = causal_info[1]
+                    tmp_edge1 = causal_info[3]
+                    if tmp_edge1 >0:
+                        edge1 = "up-regulates"
+                    elif tmp_edge1 <0:
+                        edge1 = "down-regulates"
+                    tmp_edge2 = causal_info[5]
+                    if tmp_edge2 >0:
+                        edge2 = "activates"
+                    elif tmp_edge2 <0:
+                        edge2 = "represses"
 
-                if include_genes is True:
-                    cytoscape_output.append([mutation,edge1,reg,edge2,regulon,condensed_genes,condensed_samples])
-                elif include_genes is False:
-                    cytoscape_output.append([mutation,edge1,reg,edge2,regulon])
+                    if include_genes is True:
+                        cytoscape_output.append([mutation,edge1,reg,edge2,regulon,condensed_genes,condensed_samples])
+                    elif include_genes is False:
+                        cytoscape_output.append([mutation,edge1,reg,edge2,regulon])
+        except KeyError:
+            # WW: some data can lead to many holes, for now, report the hole, and continue
+            logging.warn('regulon %d not found in causal_results !!!, skipping', regulon)
+            pass
 
     cytoscapeDf = pd.DataFrame(np.vstack(cytoscape_output))
 
