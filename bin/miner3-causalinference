@@ -149,10 +149,13 @@ if __name__ == '__main__':
     causal_results.to_csv(os.path.join(args.outdir, "completeCausalResults.csv"))
 
     wire_diagram_out = os.path.join(args.outdir, 'wiring_diagram.csv')
-    wire_diagram = miner.wiringDiagram(causal_results, regulon_modules,
-                                       coherent_samples_matrix,
-                                       include_genes=False,
-                                       savefile=wire_diagram_out)
+    try:
+        wire_diagram = miner.wiringDiagram(causal_results, regulon_modules,
+                                           coherent_samples_matrix,
+                                           include_genes=False,
+                                           savefile=wire_diagram_out)
+    except:
+        logging.warn("could not build wiring diagram !!!")
 
 
     # Generate Filtered Causal Flows
