@@ -146,17 +146,8 @@ if __name__ == '__main__':
 
     # compile all causal results
     causal_results = miner.readCausalFiles(result_dir)
-    causal_results.to_csv(os.path.join(args.outdir, "completeCausalResults.csv"))
-
-    wire_diagram_out = os.path.join(args.outdir, 'wiring_diagram.csv')
-    try:
-        wire_diagram = miner.wiringDiagram(causal_results, regulon_modules,
-                                           coherent_samples_matrix,
-                                           include_genes=False,
-                                           savefile=wire_diagram_out)
-    except:
-        logging.warn("could not build wiring diagram !!!")
-
+    causal_result_path = os.path.join(args.outdir, "completeCausalResults.csv")
+    causal_results.to_csv(causal_result_path)
 
     # Generate Filtered Causal Flows
     causal_results_regulon_filtered = causal_results[causal_results["-log10(p)_Regulon_stratification"]>=-np.log10(0.05)]
@@ -164,7 +155,7 @@ if __name__ == '__main__':
     causal_results_aligned_correlated = causal_results_aligned[causal_results_aligned["RegulatorRegulon_Spearman_p-value"]<=0.05]
     causal_results_stratified_aligned_correlated = causal_results_aligned_correlated[causal_results_aligned_correlated["-log10(p)_MutationRegulatorEdge"]>=-np.log10(0.05)]
 
-    # for all causal flows, 
+    # for all causal flows,
     # the regulon is differentially active w.r.t the mutation,
     # the regulator is differentially active w.r.t the mutation,
     # the regulator is significantly correlated to the regulon,
@@ -172,3 +163,15 @@ if __name__ == '__main__':
     # downstream of the regulator are consistent with the perturbation from the mutation
     causal_results_stratified_aligned_correlated.to_csv(os.path.join(args.outdir,
                                                                      "filteredCausalResults.csv"))
+
+    # write the diagram at the very end, and we re-read the complete causal results
+    # to avoid strange side effects
+    wire_diagram_out = os.path.join(args.outdir, 'wiring_diagram.csv')
+    causal_results = pd.read_csv(causal_result_path, index_col=0, header=0)
+    try:
+        wire_diagram = miner.wiringDiagram(causal_results, regulon_modules,
+                                           coherent_samples_matrix,
+                                           include_genes=False,
+                                           savefile=wire_diagram_out)
+    except:
+        logging.warn("could not build wiring diagram !!!")
