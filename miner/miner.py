@@ -2315,7 +2315,7 @@ def reduceModules(df,programs,states,stateThreshold=0.75,saveFile=None):
     return statesDf
 
 
-def programsVsStates(statesDf,states,filename=None,showplot=False):
+def programsVsStates(statesDf,states, filename=None, csvpath=None, showplot=False):
     pixel = np.zeros((statesDf.shape[0],len(states)))
     for i in range(statesDf.shape[0]):
         for j in range(len(states)):
@@ -2323,6 +2323,7 @@ def programsVsStates(statesDf,states,filename=None,showplot=False):
 
     pixel = pd.DataFrame(pixel)
     pixel.index = statesDf.index
+    pixel.to_csv(csvpath, sep='\t')
 
     if showplot is False:
         return pixel

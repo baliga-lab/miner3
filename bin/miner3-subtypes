@@ -126,7 +126,7 @@ if __name__ == '__main__':
                                     saveFile=os.path.join(args.outdir, "transcriptional_programs.pdf"))
 
     # Cluster patients into subtypes and give the activity of each program in each subtype
-    states_df.to_csv(os.path.join(args.outdir, "programs_vs_states.csv"), sep='\t')
     programsVsStates = miner.programsVsStates(states_df, states,
                                               filename=os.path.join(args.outdir, "programs_vs_states.pdf"),
+                                              csvpath=os.path.join(args.outdir, "programs_vs_states.csv"),
                                               showplot=True)
