@@ -115,6 +115,17 @@ def remove_null_rows(df):
     return filteredDf
 
 
+def make_entrez_map(conversion_table_path):
+    result = {}
+    idMap = pd.read_csv(conversion_table_path, sep="\t")
+    genetypes = list(set(idMap.iloc[:,2]))
+    for index, row in idMap.iterrows():
+        preferred, name, source = row
+        if source.startswith('Entrez'):
+            result[preferred] = name
+    return result
+
+
 def identifierConversion(expressionData, conversion_table_path):
     idMap = pd.read_csv(conversion_table_path, sep="\t")
     genetypes = list(set(idMap.iloc[:,2]))

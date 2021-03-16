@@ -106,11 +106,13 @@ if __name__ == '__main__':
 
     # FIRM export: note that we do not check whether we have RefSeq or Entrez, maybe this should be
     # checked in the glue
+    entrez_map = miner.make_entrez_map(args.mapfile)
     with open(os.path.join(args.outdir, args.firmout), 'w') as outfile:
         outfile.write('Gene\tGroup\n')
         for regulon, genes in regulon_modules.items():
             for gene in genes:
-                outfile.write('%s\t%s\n' % (gene, regulon))
+                if gene in entrez_map:
+                    outfile.write('%s\t%s\n' % (entrez_map[gene], regulon))
 
     # OpenTargets export
     with open(os.path.join(args.outdir, args.genelist), 'w') as outfile:
