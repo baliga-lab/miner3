@@ -152,6 +152,7 @@ if __name__ == '__main__':
         r, g, b, a = patch.get_facecolor()
         patch.set_facecolor((r, g, b, 0.8))
 
+    guan_srv_df.to_csv(os.path.join(args.outdir, "boxplot_swarm_data.csv"))
     sns.swarmplot(x='group', y='value', data=guan_srv_df, order=np.argsort(xmedians),
                   size=5, color=[0.15,0.15,0.15], edgecolor="black")
 

@@ -337,6 +337,7 @@ if __name__ == '__main__':
     labels_df.index = np.hstack(np.array(boxplot_samples)[np.argsort(ranks)])
     labels_df.columns = ["label"]
     plot_data = pd.concat([guanSurvivalDfMMRF.loc[labels_df.index,"GuanScore"],labels_df],axis=1)
+    plot_data.to_csv(os.path.join(args.outdir, "violin_states_risk.csv"))
 
     rank_order = np.array(list(set(np.hstack(boxplot_names))))[np.argsort(ranks)]
     ranked_t414 = np.array(percent_t414)[np.argsort(ranks)]
@@ -401,7 +402,3 @@ if __name__ == '__main__':
 
         plt.savefig(os.path.join(args.outdir,"barplot_states_translocations.pdf"),
                     bbox_inches="tight")
-
-
-
-
