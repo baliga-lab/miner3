@@ -14,19 +14,6 @@ import json
 
 ENDPOINT_URL = "https://api.platform.opentargets.org/api/v4/graphql"
 
-TARGET_ASSOCIATIONS_QUERY = """query targetAssociations {
-  target(ensemblId: "ENSG00000001167") {
-    id
-    associatedDiseases {
-      rows {
-        disease {
-          id
-          name
-        }
-      }
-    }
-  }
-}"""
 
 DRUG_QUERY = """query mydrugs {
   target(ensemblId: "%s") {
@@ -186,17 +173,7 @@ def drug_info_for_drugs(args, result_thresh=60.0):
         json.dump(all_results, outfile)
 
 
-DESCRIPTION = "get_opentargets - find opentargets data for genes and disease"
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     description=DESCRIPTION)
-    parser.add_argument('genes', help="list of genes separated by new lines in EnsEMBL format")
-    parser.add_argument('--disease', action="append", help="disease to filter by", default=[])
-    parser.add_argument('--disease_file', help="disease to filter by", default=None)
-    parser.add_argument('--trial_phase', type=int, help="trial phase for drugs", default=None)
-    parser.add_argument('outdir', help="output directory")
-    args = parser.parse_args()
-
+def drug_info_for_genes(args):
     if not os.path.exists(args.outdir):
         os.makedirs(args.outdir)
 
@@ -245,3 +222,17 @@ if __name__ == '__main__':
 
     # write backgrounds
     compute_backgrounds(unique_results, args.outdir)
+
+
+DESCRIPTION = "get_opentargets - find opentargets data for genes and disease"
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=DESCRIPTION)
+    parser.add_argument('genes', help="list of genes separated by new lines in EnsEMBL format")
+    parser.add_argument('--disease', action="append", help="disease to filter by", default=[])
+    parser.add_argument('--disease_file', help="disease to filter by", default=None)
+    parser.add_argument('--trial_phase', type=int, help="trial phase for drugs", default=None)
+    parser.add_argument('outdir', help="output directory")
+    args = parser.parse_args()
+
+    drug_info_for_genes(args)
