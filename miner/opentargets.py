@@ -1,9 +1,58 @@
 #!/usr/bin/env python3
-from opentargets import OpenTargetsClient
-import json
-import argparse
+
+"""
+An OpenTargets Client based on the V4 GraphQL API
+"""
+from gql import Client, gql
+from gql.transport.requests import RequestsHTTPTransport
 from collections import defaultdict
+
 import os
+import argparse
+import json
+
+
+ENDPOINT_URL = "https://api.platform.opentargets.org/api/v4/graphql"
+
+TARGET_ASSOCIATIONS_QUERY = """query targetAssociations {
+  target(ensemblId: "ENSG00000001167") {
+    id
+    associatedDiseases {
+      rows {
+        disease {
+          id
+          name
+        }
+      }
+    }
+  }
+}"""
+
+DRUG_QUERY = """query mydrugs {
+  target(ensemblId: "%s") {
+    id
+    associatedDiseases {
+      rows {
+      	disease {
+          name
+          knownDrugs {
+            rows {
+              approvedName
+              prefName
+              phase
+              status
+              targetClass
+              mechanismOfAction
+              drugType
+              drugId
+            }
+          }
+        }
+      }
+    }
+  }
+}"""
+
 
 
 def uniqify(gene_drugs):
@@ -37,46 +86,6 @@ def item_meets_criteria(item, diseases, trial_phase):
             (trial_phase is None or get_drug_trial_phase(item) == trial_phase))
 
 
-
-def get_drug_trial_phase(item):
-    trial_phase = None
-    if "evidence" in item:
-        evidence = item["evidence"]
-        if "drug2clinic" in evidence:
-            drug2clinic = evidence["drug2clinic"]
-            if "clinical_trial_phase" in drug2clinic:
-                trial_phase = drug2clinic["clinical_trial_phase"]["numeric_index"]
-    return trial_phase
-
-
-def get_drugs(client, gene, all_diseases, diseases, trial_phase=None):
-    #response = client.get_evidence_for_target(gene, fields=['drug.*', 'target.target_class',
-    #                                                        'disease.efo_info.label',
-    #                                                        'evidence.target2drug.mechanism_of_action'])
-    # we just get everything
-    response = client.get_evidence_for_target(gene)
-    result = []
-
-    for item in response:
-        # only count occurring diseases if they have a drug
-
-        if 'drug' in item:
-            all_diseases[item['disease']['efo_info']['label']] += 1
-
-        if item_meets_criteria(item, diseases, trial_phase):
-            item_trial_phase = get_drug_trial_phase(item)
-            if item_trial_phase is None:
-                item_trial_phase = 'NA'
-            out_item = {"drug": item['drug'], 'trial_phase': item_trial_phase}
-            if 'target' in item and 'target_class' in item['target']:
-                out_item['target_class'] = item['target']['target_class']
-            if ('evidence' in item and 'target2drug' in item['evidence']
-                and 'mechanism_of_action' in item['evidence']['target2drug']):
-                out_item['mechanism_of_action'] = item['evidence']['target2drug']['mechanism_of_action']
-            result.append(out_item)
-    return result
-
-
 def compute_backgrounds(gene_opentargets, outdir):
     num_genes = len(gene_opentargets)
     num_drugs = defaultdict(int)
@@ -104,6 +113,37 @@ def compute_backgrounds(gene_opentargets, outdir):
         json.dump(num_target_classes, outfile)
     with open(os.path.join(outdir, 'mechanism_of_action_background.json'), 'w') as outfile:
         json.dump(num_mechanism_of_action, outfile)
+
+
+def get_drugs(client, gene, all_diseases, diseases, trial_phase=None):
+    query = gql(DRUG_QUERY % gene)
+    result = client.execute(query)
+    diseases = result['target']["associatedDiseases"]["rows"]
+    results = []
+    for item in diseases:
+        disease = item['disease']
+
+        if disease["knownDrugs"] is None:
+            drugs = []
+        else:
+            drugs = disease["knownDrugs"]["rows"]
+        if len(drugs) > 0:
+            all_diseases[disease["name"]] += 1
+
+        for drug in drugs:
+            trial_phase = drug["phase"]
+            out_item = {
+                "drug": {
+                    'id': drug['drugId'],
+                    'molecule_name': drug['prefName'],
+                    'molecule_type': drug['drugType']
+                },
+                "trial_phase": trial_phase,
+                "mechanism_of_action": drug['mechanismOfAction'],
+                "target_class": drug['targetClass']
+            }
+            results.append(out_item)
+    return results
 
 
 def drug_info_for_drugs(args, result_thresh=60.0):
@@ -163,8 +203,6 @@ if __name__ == '__main__':
     with open(args.genes) as infile:
         genes = [s.strip() for s in infile]
 
-    client = OpenTargetsClient()
-
     all_results = {}
     all_diseases = defaultdict(int)
     num_genes = len(genes)
@@ -175,10 +213,23 @@ if __name__ == '__main__':
                 diseases.add(d.strip())
     print("Diseases: " + str(diseases))
 
-    for i, g in enumerate(genes):
-        print('%s - %d of %d' % (g, i + 1, num_genes))
-        result = get_drugs(client, g, all_diseases, diseases, args.trial_phase)
-        all_results[g] = result
+    tp = RequestsHTTPTransport(url=ENDPOINT_URL,
+                               verify=True, retries=3)
+
+    client = Client(transport=tp, fetch_schema_from_transport=True)
+    #gene = "ENSG00000001167"
+    diseases = set([])
+    all_diseases = defaultdict(int)
+    trial_phase = None
+
+    for i, gene in enumerate(genes):
+        print('%s - %d of %d' % (gene, i + 1, num_genes))
+        try:
+            result = get_drugs(client, gene, all_diseases, diseases, trial_phase)
+            all_results[gene] = result
+        except:
+            print("FAILURE: could not retrieve info for gene '%s' - skipping" % gene)
+
 
     with open(os.path.join(args.outdir, 'diseases.tsv'), 'w') as outfile:
         for disease in sorted(all_diseases.keys()):
