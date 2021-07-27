@@ -10,6 +10,7 @@ from collections import defaultdict
 import os
 import argparse
 import json
+from chembl_webresource_client.new_client import new_client
 
 
 ENDPOINT_URL = "https://api.platform.opentargets.org/api/v4/graphql"
@@ -133,44 +134,60 @@ def get_drugs(client, gene, all_diseases, diseases, trial_phase=None):
     return results
 
 
+
+CHEMBL_LOOKUP_ID_URL = "https://www.ebi.ac.uk/chembl/api/data/docs#collapse_GET_chembl_id_lookup_api_get_search"
+
+DRUG_TARGETS_QUERY = """
+query drug_targets {
+  drug(chemblId: "%s") {
+    id
+    name
+    linkedTargets {
+      rows {
+        id
+      }
+    }
+  }
+}
+"""
+
 def drug_info_for_drugs(args, result_thresh=60.0):
     """retrieve all opentargets drug information for a list of drugs"""
-    client = OpenTargetsClient()
-    all_results = {}
-    with open(args.drugs) as infile:
-        for line in infile:
-            drug = line.strip()
-            print(drug)
-            # evaluate the json result
-            try:
-                results = client.search(drug)
-                all_results[drug] = []
-                for result in results:
-                    print(list(result.keys()))
-                    res_score = result['score']
-                    res_data = result['data']
-
-                    # break if score too low
-                    if res_score < result_thresh:
-                        break
-
-                    disease = res_data['name']
-                    print(list(result['data'].keys()))
-                    drugs = result['data']['drugs']  # just a list of drugs
-                    print("EVIDENCE_DATA: ", drugs['evidence_data'])
-                    for key, entry in drugs.items():
-                        print("KEY: ", key)
-                        print("ENTRY: ", entry)
-                    all_results[drug].append({'disease': disease, 'score': res_score, 'drugs': drugs})
-            except Exception as e:
-                print("WARNING: problems retrieving results for drug '%s' - skipping" % drug)
-            break
-
     if not os.path.exists(args.outdir):
         os.makedirs(args.outdir)
 
-    with open(os.path.join(args.outdir, 'drugs_opentargets.json'), 'w') as outfile:
-        json.dump(all_results, outfile)
+    with open(args.drugs) as infile:
+        drugs = [s.strip() for s in infile]
+
+    # Step 1: collect the CHEMBL IDs
+    drug_ids = {}
+    molecule = new_client.molecule
+
+    for i, drug in enumerate(drugs):
+        print('%s - %d of %d' % (drug, i + 1, len(drugs)))
+        try:
+            res = molecule.search(drug)
+            entry = res[0]
+            drug_ids[drug] = entry['molecule_chembl_id']
+        except:
+            print("FAILURE: could not retrieve info for molecule '%s' - skipping" % drug)
+
+    print(drug_ids)
+    # Step 2: collect targets for the drug ids we obtained in step 1
+    tp = RequestsHTTPTransport(url=ENDPOINT_URL,
+                               verify=True, retries=3)
+    client = Client(transport=tp, fetch_schema_from_transport=True)
+
+    target_ids = set([])
+    for drug in drug_ids.values():
+        query = gql(DRUG_TARGETS_QUERY % drug)
+        result = client.execute(query)
+        targets = result["drug"]["linkedTargets"]["rows"]
+        for target in targets:
+            ensid = target["id"]
+            target_ids.add(ensid)
+    # call our central gene retrieval function
+    _drug_info_for_genes(list(target_ids), args)
 
 
 def drug_info_for_genes(args):
@@ -180,6 +197,11 @@ def drug_info_for_genes(args):
     with open(args.genes) as infile:
         genes = [s.strip() for s in infile]
 
+    _drug_info_for_genes(genes, args)
+
+
+def _drug_info_for_genes(genes, args):
+    """Central workhorse function"""
     all_results = {}
     all_diseases = defaultdict(int)
     num_genes = len(genes)
@@ -194,7 +216,6 @@ def drug_info_for_genes(args):
                                verify=True, retries=3)
 
     client = Client(transport=tp, fetch_schema_from_transport=True)
-    #gene = "ENSG00000001167"
     diseases = set([])
     all_diseases = defaultdict(int)
     trial_phase = None
