@@ -151,6 +151,42 @@ query drug_targets {
 }
 """
 
+DRUG_INFO_QUERY = """
+query drug_targets {
+  drug(chemblId: "%s") {
+    id
+    name
+    drugType
+    isApproved
+    approvedIndications
+    maximumClinicalTrialPhase
+    mechanismsOfAction {
+      rows {
+        mechanismOfAction
+        actionType
+        targetName
+        targets {
+          id
+          approvedName
+          bioType
+        }
+      }
+    }
+    knownDrugs {
+      rows {
+        targetId
+        targetClass
+        diseaseId
+        urls {
+          name
+          url
+        }
+      }
+    }
+  }
+}
+"""
+
 def drug_info_for_drugs(args, result_thresh=60.0):
     """retrieve all opentargets drug information for a list of drugs"""
     if not os.path.exists(args.outdir):
@@ -172,22 +208,102 @@ def drug_info_for_drugs(args, result_thresh=60.0):
         except:
             print("FAILURE: could not retrieve info for molecule '%s' - skipping" % drug)
 
-    print(drug_ids)
+    #print(drug_ids)
     # Step 2: collect targets for the drug ids we obtained in step 1
     tp = RequestsHTTPTransport(url=ENDPOINT_URL,
                                verify=True, retries=3)
     client = Client(transport=tp, fetch_schema_from_transport=True)
 
     target_ids = set([])
-    for drug in drug_ids.values():
-        query = gql(DRUG_TARGETS_QUERY % drug)
-        result = client.execute(query)
-        targets = result["drug"]["linkedTargets"]["rows"]
-        for target in targets:
-            ensid = target["id"]
-            target_ids.add(ensid)
-    # call our central gene retrieval function
-    _drug_info_for_genes(list(target_ids), args)
+    results = set()
+    all_results = {}
+    for i, chembl_id in enumerate(drug_ids.values()):
+        print('%s - %d of %d' % (chembl_id, i, len(drug_ids)))
+        try:
+            query = gql(DRUG_INFO_QUERY % chembl_id)
+            result = client.execute(query)
+            drug = result["drug"]
+            trial_urls = {}
+            out_item = {}
+            try:
+                out_item['molecule_name'] = drug['name']
+            except:
+                # This would be weird
+                continue
+            try:
+                out_item['drug_type'] = drug['drugType']
+            except:
+                out_item['drug_type'] = ''
+            try:
+                out_item['indications'] = drug['approvedIndications']
+                if out_item['indications'] is None:
+                    out_item['indications'] = []
+            except:
+                out_item['indications'] = []
+            try:
+                out_item['trial_phase'] = drug['maximumClinicalTrialPhase']
+            except:
+                out_item['trial_phase'] = ''
+            try:
+                out_item['chembl_uri'] = 'https://www.ebi.ac.uk/chembl/compound_report_card/%s/' % chembl_id
+            except:
+                out_item['chembl_uri'] = ''
+
+            try:
+                mech_action = drug['mechanismsOfAction']['rows'][0]
+                out_item['mechanism_of_action'] = mech_action['mechanismOfAction']
+                out_item['action_type'] = mech_action['actionType']
+            except:
+                out_item['mechanism_of_action'] = ''
+                out_item['action_type'] = ''
+
+            # error handling
+            try:
+                targets = drug['knownDrugs']['rows']
+            except:
+                targets = []
+
+            out_item['targets'] = {}
+            out_item['targetstr'] = []
+            for target in targets:
+                try:
+                    out_item['targets'][target['targetId']] = target['targetClass'][0]
+                    for url in target['urls']:
+                        trial_urls[url['name']] = url['url']
+                except:
+                    pass
+
+            for tid, tclass in out_item['targets'].items():
+                out_item['targetstr'].append('%s:%s' % (tid, tclass))
+
+            # Clinical Trials URL if available
+            try:
+                out_item['trial_url'] = trial_urls['ClinicalTrials']
+            except:
+                out_item['trial_url'] = ''
+
+            all_results[chembl_id] = out_item
+        except:
+            print("FAILURE - could not retrieve targets for drug '%s' - skipping" % chembl_id)
+            raise
+
+    # output as JSON
+    with open(os.path.join(args.outdir, 'drug_opentargets.json'), 'w') as outfile:
+        json.dump(all_results, outfile)
+
+    # output as CSV
+    with open(os.path.join(args.outdir, 'drug_opentargets.csv'), 'w') as outfile:
+        outfile.write('\t'.join(['CHEMBL_ID', 'molecule_name', 'molecule_type',
+                                 'indications', 'trial_phase', 'chembl_uri',
+                                 'mechanism_of_action', 'action_type', 'targets']))
+        outfile.write('\n')
+        for chembl_id, info in all_results.items():
+            out_row = [chembl_id, info['molecule_name'], info['drug_type'],
+                       ','.join(list(info['indications'])), str(info['trial_phase']), info['chembl_uri'],
+                       info['mechanism_of_action'], info['action_type'],
+                       ','.join(info['targetstr'])]
+            outfile.write('\t'.join(out_row))
+            outfile.write('\n')
 
 
 def drug_info_for_genes(args):
