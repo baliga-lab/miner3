@@ -9,10 +9,10 @@ PACKAGE_DATA = {
 
 INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas', 'sklearn', 'lifelines',
                     'matplotlib', 'seaborn', 'mygene',
-                    'pydot', 'graphviz', 'opentargets']
+                    'pydot', 'graphviz', 'gql', 'chembl_webresource_client']
 setuptools.setup(
     name="isb_miner3",
-    version="1.0.8",
+    version="1.0.9",
     author="Matt Wall",
     author_email="mwall@systemsbiology.org",
     description="MINER analysis tools",
@@ -42,4 +42,4 @@ setuptools.setup(
              'bin/miner3-bcmembers', 'bin/miner3-subtypes',
              'bin/miner3-survival', 'bin/miner3-causalinference', 'bin/miner3-causalinf-pre',
              'bin/miner3-causalinf-post', 'bin/miner3-neo', 'bin/miner3-riskpredict',
-             'bin/gene2opentargets'])
+             'bin/gene2opentargets', 'bin/drug2opentargets'])

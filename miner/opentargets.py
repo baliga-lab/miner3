@@ -159,6 +159,30 @@ query drug_targets {
     drugType
     isApproved
     approvedIndications
+    drugWarnings {
+      warningType
+      description
+      toxicityClass
+    }
+    literatureOcurrences {
+      rows {
+        pmid
+      }
+    }
+    linkedTargets {
+      rows {
+        id
+        approvedName
+      }
+    }
+    indications {
+      rows {
+        disease {
+          id
+          name
+        }
+      }
+    }
     maximumClinicalTrialPhase
     mechanismsOfAction {
       rows {
@@ -176,6 +200,7 @@ query drug_targets {
       rows {
         targetId
         targetClass
+        approvedName
         diseaseId
         urls {
           name
@@ -235,11 +260,17 @@ def drug_info_for_drugs(args, result_thresh=60.0):
             except:
                 out_item['drug_type'] = ''
             try:
-                out_item['indications'] = drug['approvedIndications']
-                if out_item['indications'] is None:
-                    out_item['indications'] = []
+                indications = drug['indications']['rows']
+                out_item['indication_ids'] = set()
+                out_item['indication_names'] = set()
+                for indication in indications:
+                    out_item['indication_ids'].add(indication['disease']['id'])
+                    out_item['indication_names'].add(indication['disease']['name'])
+                out_item['indication_ids'] = list(out_item['indication_ids'])
+                out_item['indication_names'] = list(out_item['indication_names'])
             except:
-                out_item['indications'] = []
+                out_item['indication_ids'] = []
+                out_item['indication_names'] = []
             try:
                 out_item['trial_phase'] = drug['maximumClinicalTrialPhase']
             except:
@@ -267,14 +298,17 @@ def drug_info_for_drugs(args, result_thresh=60.0):
             out_item['targetstr'] = []
             out_item['target_id'] = ''
             out_item['target_class'] = ''
+            out_item['approved_name'] = ''
             for target in targets:
                 try:
                     out_item['targets'][target['targetId']] = target['targetClass'][0]
                     out_item['target_id'] = target['targetId']
                     out_item['target_class'] = target['targetClass'][0]
+                    out_item['approved_name'] = target['approvedName']
                     for url in target['urls']:
                         trial_urls[url['name']] = url['url']
                 except:
+                    raise
                     pass
 
             for tid, tclass in out_item['targets'].items():
@@ -287,6 +321,9 @@ def drug_info_for_drugs(args, result_thresh=60.0):
                 out_item['trial_url'] = ''
 
             all_results[chembl_id] = out_item
+            out_item['literature_occ'] = []
+            for row in drug['literatureOcurrences']['rows']:
+                out_item['literature_occ'].append(row['pmid'])
         except:
             print("FAILURE - could not retrieve targets for drug '%s' - skipping" % chembl_id)
             raise
@@ -298,14 +335,18 @@ def drug_info_for_drugs(args, result_thresh=60.0):
     # output as CSV
     with open(os.path.join(args.outdir, 'drug_opentargets.csv'), 'w') as outfile:
         outfile.write('\t'.join(['CHEMBL_ID', 'molecule_name', 'molecule_type',
-                                 'indications', 'trial_phase', 'chembl_uri',
-                                 'mechanism_of_action', 'action_type', 'target_id', 'target_class']))
+                                 'indication_ids', 'indication_names', 'trial_phase', 'chembl_uri',
+                                 'mechanism_of_action', 'action_type', 'target_id', 'target_class',
+                                 'approved_name', 'literature_occ']))
         outfile.write('\n')
         for chembl_id, info in all_results.items():
             out_row = [chembl_id, info['molecule_name'], info['drug_type'],
-                       ':'.join(list(info['indications'])), str(info['trial_phase']), info['chembl_uri'],
+                       ':'.join(list(info['indication_ids'])),
+                       ':'.join(list(info['indication_names'])),
+                       str(info['trial_phase']), info['chembl_uri'],
                        info['mechanism_of_action'], info['action_type'],
-                       info['target_id'], info['target_class']]
+                       info['target_id'], info['target_class'],
+                       info['approved_name'], ':'.join(info['literature_occ'])]
             outfile.write('\t'.join(out_row))
             outfile.write('\n')
 

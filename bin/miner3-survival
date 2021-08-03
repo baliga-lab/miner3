@@ -84,7 +84,23 @@ if __name__ == '__main__':
                                               saveFile=os.path.join(args.outdir,
                                                                     "centroid_clusters_heatmap.pdf"))
 
-    programs, states = miner.mosaic(dfr=ordered_dm,
+
+    # use the inferSubtypes again !!!!
+    reference_matrix = overexpressed_members_matrix - underexpressed_members_matrix
+    primary_matrix = overexpressed_members_matrix
+    primary_dictionary = overexpressed_members
+    secondary_matrix = underexpressed_members_matrix
+    secondary_dictionary = underexpressed_members
+
+    states, centroid_clusters = miner.inferSubtypes(reference_matrix, primary_matrix,
+                                                    secondary_matrix,
+                                                    primary_dictionary,
+                                                    secondary_dictionary,
+                                                    minClusterSize=int(np.ceil(0.01*exp_data.shape[1])),restricted_index=None)
+
+
+    ### mosaic now generates a dummy states object
+    programs, states2 = miner.mosaic(dfr=ordered_dm,
                                     clusterList=centroid_clusters,
                                     minClusterSize_x=9,
                                     minClusterSize_y=5,
@@ -128,8 +144,19 @@ if __name__ == '__main__':
 
     mmrf_groups = states
     labels = range(len(mmrf_groups))
-
     xmedians = []
+
+    ## WW: DEBUGGING
+    #guan_srv_group.to_csv(os.path.join(args.outdir, 'guan_srv_group.csv'))
+    #guan_srv.to_csv(os.path.join(args.outdir, 'guan_srv.csv'))
+    #guan_srv_df.to_csv(os.path.join(args.outdir, 'guan_srv_df.csv'))
+    print("# labels: %d" % len(mmrf_groups))
+    with open(os.path.join(args.outdir, 'mmrf_groups.txt'), 'w') as outfile:
+        for group in mmrf_groups:
+            outfile.write(str(group))
+            outfile.write('\n')
+    ## WW: DEBBUGGING END
+
 
     for i in range(len(mmrf_groups)):
         group = list(set(srv.index) & set(mmrf_groups[i]))
