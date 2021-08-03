@@ -265,9 +265,13 @@ def drug_info_for_drugs(args, result_thresh=60.0):
 
             out_item['targets'] = {}
             out_item['targetstr'] = []
+            out_item['target_id'] = ''
+            out_item['target_class'] = ''
             for target in targets:
                 try:
                     out_item['targets'][target['targetId']] = target['targetClass'][0]
+                    out_item['target_id'] = target['targetId']
+                    out_item['target_class'] = target['targetClass'][0]
                     for url in target['urls']:
                         trial_urls[url['name']] = url['url']
                 except:
@@ -295,13 +299,13 @@ def drug_info_for_drugs(args, result_thresh=60.0):
     with open(os.path.join(args.outdir, 'drug_opentargets.csv'), 'w') as outfile:
         outfile.write('\t'.join(['CHEMBL_ID', 'molecule_name', 'molecule_type',
                                  'indications', 'trial_phase', 'chembl_uri',
-                                 'mechanism_of_action', 'action_type', 'targets']))
+                                 'mechanism_of_action', 'action_type', 'target_id', 'target_class']))
         outfile.write('\n')
         for chembl_id, info in all_results.items():
             out_row = [chembl_id, info['molecule_name'], info['drug_type'],
-                       ','.join(list(info['indications'])), str(info['trial_phase']), info['chembl_uri'],
+                       ':'.join(list(info['indications'])), str(info['trial_phase']), info['chembl_uri'],
                        info['mechanism_of_action'], info['action_type'],
-                       ','.join(info['targetstr'])]
+                       info['target_id'], info['target_class']]
             outfile.write('\t'.join(out_row))
             outfile.write('\n')
 
