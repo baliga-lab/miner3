@@ -301,9 +301,10 @@ def drug_info_for_drugs(args, result_thresh=60.0):
             out_item['approved_name'] = ''
             for target in targets:
                 try:
-                    out_item['targets'][target['targetId']] = target['targetClass'][0]
                     out_item['target_id'] = target['targetId']
-                    out_item['target_class'] = target['targetClass'][0]
+                    if len(target['targetClass']) > 0:
+                        out_item['targets'][target['targetId']] = target['targetClass'][0]
+                        out_item['target_class'] = target['targetClass'][0]
                     out_item['approved_name'] = target['approvedName']
                     for url in target['urls']:
                         trial_urls[url['name']] = url['url']
@@ -337,7 +338,7 @@ def drug_info_for_drugs(args, result_thresh=60.0):
         outfile.write('\t'.join(['CHEMBL_ID', 'molecule_name', 'molecule_type',
                                  'indication_ids', 'indication_names', 'trial_phase', 'chembl_uri',
                                  'mechanism_of_action', 'action_type', 'target_id', 'target_class',
-                                 'approved_name', 'literature_occ']))
+                                 'approved_name', 'literature_occ', 'trial_url']))
         outfile.write('\n')
         for chembl_id, info in all_results.items():
             out_row = [chembl_id, info['molecule_name'], info['drug_type'],
@@ -346,7 +347,8 @@ def drug_info_for_drugs(args, result_thresh=60.0):
                        str(info['trial_phase']), info['chembl_uri'],
                        info['mechanism_of_action'], info['action_type'],
                        info['target_id'], info['target_class'],
-                       info['approved_name'], ':'.join(info['literature_occ'])]
+                       info['approved_name'], ':'.join(info['literature_occ']),
+                       info['trial_url']]
             outfile.write('\t'.join(out_row))
             outfile.write('\n')
 
