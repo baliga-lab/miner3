@@ -219,11 +219,19 @@ CSV_DELIM = ','
 
 def drug_info_for_drugs(args, result_thresh=60.0):
     """retrieve all opentargets drug information for a list of drugs"""
+    errors = []
     if not os.path.exists(args.outdir):
         os.makedirs(args.outdir)
 
     with open(args.drugs) as infile:
         drugs = [s.strip() for s in infile]
+
+    diseases = set(args.disease)
+    if args.disease_file is not None:
+        with open(args.disease_file) as infile:
+            for d in infile:
+                diseases.add(d.strip())
+
 
     # Step 1: collect the CHEMBL IDs
     drug_ids = {}
@@ -258,24 +266,28 @@ def drug_info_for_drugs(args, result_thresh=60.0):
             try:
                 out_item['molecule_name'] = drug['name']
             except:
+                errors.append('WARNING - no molecule name for "%s"' % chembl_id)
                 # This would be weird
-                continue
+                #continue
             try:
                 out_item['drug_type'] = drug['drugType']
             except:
                 out_item['drug_type'] = ''
+                errors.append('WARNING - no drug type for "%s"' % chembl_id)
             try:
+                for d in diseases:
+                    out_item['max_%s_phase' % d] = 0
                 indications = drug['indications']['rows']
                 out_item['indication_ids'] = set()
                 out_item['indication_names'] = set()
-                out_item['max_mm_phase'] = 0
                 for indication in indications:
-                    try:
-                        if indication['disease']['name'] == 'multiple myeloma':
-                            out_item['max_mm_phase'] = indication['maxPhaseForIndication']
-                    except:
-                        raise
-                        #pass
+                    for d in diseases:
+                        try:
+                            indication['disease']['name'].index(d)
+                            if indication['maxPhaseForIndication'] > out_item['max_%s_phase' % d]:
+                                out_item['max_%s_phase' % d] = indication['maxPhaseForIndication']
+                        except:
+                            pass
                     out_item['indication_ids'].add(indication['disease']['id'])
                     out_item['indication_names'].add(indication['disease']['name'])
                 out_item['indication_ids'] = list(out_item['indication_ids'])
@@ -347,23 +359,28 @@ def drug_info_for_drugs(args, result_thresh=60.0):
 
     # output as CSV
     with open(os.path.join(args.outdir, 'drug_opentargets.csv'), 'w') as outfile:
-        outfile.write(CSV_DELIM.join(['CHEMBL_ID', 'molecule_name', 'molecule_type',
-                                      'indication_ids', 'indication_names', 'max_trial_phase',
-                                      'max_mm_trial_phase',
-                                      'chembl_uri',
-                                      'mechanism_of_action', 'action_type', 'target_id', 'target_class',
-                                      'approved_name', 'literature_occ', 'trial_url']))
+        header = ['CHEMBL_ID', 'molecule_name', 'molecule_type',
+                  'indication_ids', 'indication_names', 'max_trial_phase']
+        for d in diseases:
+            header.append('max_%s_phase' % d)
+        header.extend(['chembl_uri',
+                      'mechanism_of_action', 'action_type', 'target_id', 'target_class',
+                      'approved_name', 'literature_occ', 'trial_url'])
+        outfile.write(CSV_DELIM.join(header))
         outfile.write('\n')
+
         for chembl_id, info in all_results.items():
             out_row = [chembl_id, info['molecule_name'], info['drug_type'],
                        ':'.join(list(info['indication_ids'])),
                        ':'.join(list(info['indication_names'])),
-                       str(info['trial_phase']), str(info['max_mm_phase']),
-                       info['chembl_uri'],
-                       info['mechanism_of_action'], info['action_type'],
-                       info['target_id'], info['target_class'],
-                       info['approved_name'], ':'.join(info['literature_occ']),
-                       info['trial_url']]
+                       str(info['trial_phase'])]
+            for d in diseases:
+                out_row.append(str(info['max_%s_phase' % d]))
+            out_row.extend([info['chembl_uri'],
+                            info['mechanism_of_action'], info['action_type'],
+                            info['target_id'], info['target_class'],
+                            info['approved_name'], ':'.join(info['literature_occ']),
+                            info['trial_url']])
             outfile.write('\t'.join(out_row))
             outfile.write('\n')
 
