@@ -181,6 +181,7 @@ query drug_targets {
           id
           name
         }
+        maxPhaseForIndication
       }
     }
     maximumClinicalTrialPhase
@@ -211,6 +212,10 @@ query drug_targets {
   }
 }
 """
+
+# CSV field delimiter
+CSV_DELIM = ','
+
 
 def drug_info_for_drugs(args, result_thresh=60.0):
     """retrieve all opentargets drug information for a list of drugs"""
@@ -263,7 +268,14 @@ def drug_info_for_drugs(args, result_thresh=60.0):
                 indications = drug['indications']['rows']
                 out_item['indication_ids'] = set()
                 out_item['indication_names'] = set()
+                out_item['max_mm_phase'] = 0
                 for indication in indications:
+                    try:
+                        if indication['disease']['name'] == 'multiple myeloma':
+                            out_item['max_mm_phase'] = indication['maxPhaseForIndication']
+                    except:
+                        raise
+                        #pass
                     out_item['indication_ids'].add(indication['disease']['id'])
                     out_item['indication_names'].add(indication['disease']['name'])
                 out_item['indication_ids'] = list(out_item['indication_ids'])
@@ -335,16 +347,19 @@ def drug_info_for_drugs(args, result_thresh=60.0):
 
     # output as CSV
     with open(os.path.join(args.outdir, 'drug_opentargets.csv'), 'w') as outfile:
-        outfile.write('\t'.join(['CHEMBL_ID', 'molecule_name', 'molecule_type',
-                                 'indication_ids', 'indication_names', 'trial_phase', 'chembl_uri',
-                                 'mechanism_of_action', 'action_type', 'target_id', 'target_class',
-                                 'approved_name', 'literature_occ', 'trial_url']))
+        outfile.write(CSV_DELIM.join(['CHEMBL_ID', 'molecule_name', 'molecule_type',
+                                      'indication_ids', 'indication_names', 'max_trial_phase',
+                                      'max_mm_trial_phase',
+                                      'chembl_uri',
+                                      'mechanism_of_action', 'action_type', 'target_id', 'target_class',
+                                      'approved_name', 'literature_occ', 'trial_url']))
         outfile.write('\n')
         for chembl_id, info in all_results.items():
             out_row = [chembl_id, info['molecule_name'], info['drug_type'],
                        ':'.join(list(info['indication_ids'])),
                        ':'.join(list(info['indication_names'])),
-                       str(info['trial_phase']), info['chembl_uri'],
+                       str(info['trial_phase']), str(info['max_mm_phase']),
+                       info['chembl_uri'],
                        info['mechanism_of_action'], info['action_type'],
                        info['target_id'], info['target_class'],
                        info['approved_name'], ':'.join(info['literature_occ']),
