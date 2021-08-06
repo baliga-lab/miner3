@@ -160,8 +160,7 @@ query drug_targets {
     isApproved
     approvedIndications
     drugWarnings {
-      warningType
-      description
+      meddraSocCode
       toxicityClass
     }
     literatureOcurrences {
@@ -202,6 +201,7 @@ query drug_targets {
         targetId
         targetClass
         approvedName
+        approvedSymbol
         diseaseId
         urls {
           name
@@ -266,6 +266,7 @@ def drug_info_for_drugs(args, result_thresh=60.0):
             try:
                 out_item['molecule_name'] = drug['name']
             except:
+                out_item['molecule_name'] = ''
                 errors.append('WARNING - no molecule name for "%s"' % chembl_id)
                 # This would be weird
                 #continue
@@ -329,7 +330,7 @@ def drug_info_for_drugs(args, result_thresh=60.0):
                     if len(target['targetClass']) > 0:
                         out_item['targets'][target['targetId']] = target['targetClass'][0]
                         out_item['target_class'] = target['targetClass'][0]
-                    out_item['approved_name'] = target['approvedName']
+                    out_item['approved_name'] = target['approvedSymbol']
                     for url in target['urls']:
                         trial_urls[url['name']] = url['url']
                 except:
@@ -347,11 +348,28 @@ def drug_info_for_drugs(args, result_thresh=60.0):
 
             all_results[chembl_id] = out_item
             out_item['literature_occ'] = []
-            for row in drug['literatureOcurrences']['rows']:
-                out_item['literature_occ'].append(row['pmid'])
+            try:
+                for row in drug['literatureOcurrences']['rows']:
+                    out_item['literature_occ'].append(row['pmid'])
+            except:
+                pass
+
+            out_item['toxicity_class'] = []
+            out_item['meddra_soc_code'] = []
+            try:
+                for warning in drug['drugWarnings']:
+                    out_item['toxicity_class'].append(str(warning['toxicityClass']))
+                    out_item['meddra_soc_code'].append(str(warning['meddraSocCode']))
+            except:
+                pass
         except:
             print("FAILURE - could not retrieve targets for drug '%s' - skipping" % chembl_id)
             raise
+
+    with open(os.path.join(args.outdir, 'errors.txt'), 'w') as outfile:
+        for error in errors:
+            outfile.write(error)
+            outfile.write('\n')
 
     # output as JSON
     with open(os.path.join(args.outdir, 'drug_opentargets.json'), 'w') as outfile:
@@ -364,8 +382,9 @@ def drug_info_for_drugs(args, result_thresh=60.0):
         for d in diseases:
             header.append('max_%s_phase' % d)
         header.extend(['chembl_uri',
-                      'mechanism_of_action', 'action_type', 'target_id', 'target_class',
-                      'approved_name', 'literature_occ', 'trial_url'])
+                       'mechanism_of_action', 'action_type', 'target_id', 'target_class',
+                       'approved_name', 'literature_occ', 'trial_url',
+                       'toxicity_class', 'meddra_soc_code'])
         outfile.write(CSV_DELIM.join(header))
         outfile.write('\n')
 
@@ -381,6 +400,8 @@ def drug_info_for_drugs(args, result_thresh=60.0):
                             info['target_id'], info['target_class'],
                             info['approved_name'], ':'.join(info['literature_occ']),
                             info['trial_url']])
+            out_row.append(':'.join(info['toxicity_class']))
+            out_row.append(':'.join(info['meddra_soc_code']))
             outfile.write('\t'.join(out_row))
             outfile.write('\n')
 
