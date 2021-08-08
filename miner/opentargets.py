@@ -236,15 +236,32 @@ def drug_info_for_drugs(args, result_thresh=60.0):
     # Step 1: collect the CHEMBL IDs
     drug_ids = {}
     molecule = new_client.molecule
+    chembl2drug = {}
 
     for i, drug in enumerate(drugs):
         print('%s - %d of %d' % (drug, i + 1, len(drugs)))
         try:
             res = molecule.search(drug)
-            entry = res[0]
-            drug_ids[drug] = entry['molecule_chembl_id']
+            for r in res:
+                synonyms = r['molecule_synonyms']
+                for s in synonyms:
+                    if s['synonyms'] == drug:
+                        entry = r
+                        break
+
+            chembl_id = entry['molecule_chembl_id']
+            #print(entry['molecule_synonyms'])
+            drug_ids[drug] = chembl_id
+            chembl2drug[chembl_id] = drug
+            #with open(os.path.join(args.outdir,'%s.json' % chembl_id), 'w') as outfile:
+            #    outfile.write(str(res))
         except:
             print("FAILURE: could not retrieve info for molecule '%s' - skipping" % drug)
+            errors.append("FAILURE: could not retrieve info for molecule '%s' - skipping" % drug)
+
+    with open(os.path.join(args.outdir, 'chembl2drug.csv'), 'w') as outfile:
+        for chembl_id, drug in chembl2drug.items():
+            outfile.write('%s\t%s\n' % (chembl_id, drug))
 
     #print(drug_ids)
     # Step 2: collect targets for the drug ids we obtained in step 1
@@ -267,14 +284,14 @@ def drug_info_for_drugs(args, result_thresh=60.0):
                 out_item['molecule_name'] = drug['name']
             except:
                 out_item['molecule_name'] = ''
-                errors.append('WARNING - no molecule name for "%s"' % chembl_id)
+                errors.append('WARNING - no molecule name for "%s" (%s)' % (chembl_id, chembl2drug[chembl_id]))
                 # This would be weird
                 #continue
             try:
                 out_item['drug_type'] = drug['drugType']
             except:
                 out_item['drug_type'] = ''
-                errors.append('WARNING - no drug type for "%s"' % chembl_id)
+                errors.append('WARNING - no drug type for "%s" (%s)' % (chembl_id, chembl2drug[chembl_id]))
             try:
                 for d in diseases:
                     out_item['max_%s_phase' % d] = 0
@@ -389,20 +406,23 @@ def drug_info_for_drugs(args, result_thresh=60.0):
         outfile.write('\n')
 
         for chembl_id, info in all_results.items():
-            out_row = [chembl_id, info['molecule_name'], info['drug_type'],
+            out_row = [chembl_id,
+                       info['molecule_name'],
+                       info['drug_type'],
                        ':'.join(list(info['indication_ids'])),
-                       ':'.join(list(info['indication_names'])),
+                       '"' + ':'.join(list(info['indication_names'])) + '"',
                        str(info['trial_phase'])]
             for d in diseases:
                 out_row.append(str(info['max_%s_phase' % d]))
             out_row.extend([info['chembl_uri'],
-                            info['mechanism_of_action'], info['action_type'],
+                            '"' + info['mechanism_of_action'] + '"',
+                            info['action_type'],
                             info['target_id'], info['target_class'],
                             info['approved_name'], ':'.join(info['literature_occ']),
                             info['trial_url']])
             out_row.append(':'.join(info['toxicity_class']))
             out_row.append(':'.join(info['meddra_soc_code']))
-            outfile.write('\t'.join(out_row))
+            outfile.write(CSV_DELIM.join(out_row))
             outfile.write('\n')
 
 
