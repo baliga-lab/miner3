@@ -471,11 +471,13 @@ def pearson_array(array,vector):
 
 def getAxes(clusters,expressionData):
     axes = {}
-    for key in list(clusters.keys()):
-        genes = clusters[key]
-        fpc = PCA(1)
-        principalComponents = fpc.fit_transform(expressionData.loc[genes,:].T)
-        axes[key] = principalComponents.ravel()
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        for key in list(clusters.keys()):
+            genes = clusters[key]
+            fpc = PCA(1)
+            principalComponents = fpc.fit_transform(expressionData.loc[genes,:].T)
+            axes[key] = principalComponents.ravel()
     return axes
 
 

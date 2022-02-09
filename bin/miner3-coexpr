@@ -104,7 +104,6 @@ if __name__ == '__main__':
     with open(os.path.join(args.outdir, "coexpressionDictionary.json"), 'w') as out:
         json.dump(revised_clusters, out)
 
-
     # retrieve first three clusters for visual inspection
     if len(revised_clusters) > 3:
         first_clusters = np.hstack([revised_clusters[i] for i in np.arange(3).astype(str)])
