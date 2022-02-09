@@ -12,7 +12,7 @@ INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas', 'sklearn', 'lifelines',
                     'pydot', 'graphviz', 'gql', 'chembl_webresource_client']
 setuptools.setup(
     name="isb_miner3",
-    version="1.0.9",
+    version="1.1.1",
     author="Matt Wall",
     author_email="mwall@systemsbiology.org",
     description="MINER analysis tools",

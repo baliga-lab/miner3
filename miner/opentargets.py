@@ -263,7 +263,10 @@ def drug_info_for_drugs(args, result_thresh=60.0):
         for chembl_id, drug in chembl2drug.items():
             outfile.write('%s\t%s\n' % (chembl_id, drug))
 
-    #print(drug_ids)
+    __info_for_drug_ids(drug_ids.values(), chembl2drug, diseases, args, errors)
+
+
+def __info_for_drug_ids(drug_ids, chembl2drug, diseases, args, errors):
     # Step 2: collect targets for the drug ids we obtained in step 1
     tp = RequestsHTTPTransport(url=ENDPOINT_URL,
                                verify=True, retries=3)
@@ -272,7 +275,7 @@ def drug_info_for_drugs(args, result_thresh=60.0):
     target_ids = set([])
     results = set()
     all_results = {}
-    for i, chembl_id in enumerate(drug_ids.values()):
+    for i, chembl_id in enumerate(drug_ids):
         print('%s - %d of %d' % (chembl_id, i, len(drug_ids)))
         try:
             query = gql(DRUG_INFO_QUERY % chembl_id)
@@ -455,11 +458,14 @@ def _drug_info_for_genes(genes, args):
     diseases = set([])
     all_diseases = defaultdict(int)
     trial_phase = None
+    drug_ids = set()
 
     for i, gene in enumerate(genes):
         print('%s - %d of %d' % (gene, i + 1, num_genes))
         try:
             result = get_drugs(client, gene, all_diseases, diseases, trial_phase)
+            for drug in result:
+                drug_ids.add(drug['drug']['id'])
             all_results[gene] = result
         except:
             print("FAILURE: could not retrieve info for gene '%s' - skipping" % gene)
@@ -479,6 +485,9 @@ def _drug_info_for_genes(genes, args):
 
     # write backgrounds
     compute_backgrounds(unique_results, args.outdir)
+
+    # (TODO) as an extra service, generate a CSV
+    #print(drug_ids)
 
 
 DESCRIPTION = "get_opentargets - find opentargets data for genes and disease"
