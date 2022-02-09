@@ -1003,29 +1003,31 @@ def principalDf(dict_,expressionData,regulons=None,subkey='genes',minNumberGenes
 
     if regulons is not None:
         dict_, df = regulonDictionary(regulons)
-    for i in list(dict_.keys()):
-        if subkey is not None:
-            genes = list(set(dict_[i][subkey])&setIndex)
-            if len(genes) < minNumberGenes:
-                continue
-        elif subkey is None:
-            genes = list(set(dict_[i])&setIndex)
-            if len(genes) < minNumberGenes:
-                continue
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        for i in list(dict_.keys()):
+            if subkey is not None:
+                genes = list(set(dict_[i][subkey])&setIndex)
+                if len(genes) < minNumberGenes:
+                    continue
+            elif subkey is None:
+                genes = list(set(dict_[i])&setIndex)
+                if len(genes) < minNumberGenes:
+                    continue
 
-        pca = PCA(1,random_state=random_state)
-        principalComponents = pca.fit_transform(expressionData.loc[genes,:].T)
-        principalDf = pd.DataFrame(principalComponents)
-        principalDf.index = expressionData.columns
-        principalDf.columns = [str(i)]
+            pca = PCA(1,random_state=random_state)
+            principalComponents = pca.fit_transform(expressionData.loc[genes,:].T)
+            principalDf = pd.DataFrame(principalComponents)
+            principalDf.index = expressionData.columns
+            principalDf.columns = [str(i)]
 
-        normPC = np.linalg.norm(np.array(principalDf.iloc[:,0]))
-        pearson = stats.pearsonr(principalDf.iloc[:,0],np.median(expressionData.loc[genes,:],axis=0))
-        signCorrection = pearson[0]/np.abs(pearson[0])
+            normPC = np.linalg.norm(np.array(principalDf.iloc[:,0]))
+            pearson = stats.pearsonr(principalDf.iloc[:,0],np.median(expressionData.loc[genes,:],axis=0))
+            signCorrection = pearson[0]/np.abs(pearson[0])
 
-        principalDf = signCorrection*principalDf/normPC
+            principalDf = signCorrection*principalDf/normPC
 
-        pcDfs.append(principalDf)
+            pcDfs.append(principalDf)
 
     principalMatrix = pd.concat(pcDfs,axis=1)
     return principalMatrix
