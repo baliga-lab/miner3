@@ -183,8 +183,8 @@ if __name__ == '__main__':
     sns.swarmplot(x='group', y='value', data=guan_srv_df, order=np.argsort(xmedians),
                   size=5, color=[0.15,0.15,0.15], edgecolor="black")
 
-    plt.ylabel("Risk score", FontSize=20)
-    plt.xlabel("Subtype", FontSize=20)
+    plt.ylabel("Risk score", fontsize=20)
+    plt.xlabel("Subtype", fontsize=20)
     boxplot_filename = ("_").join([survival_tag,"boxplot_swarm.pdf"])
     plt.savefig(os.path.join(args.outdir, boxplot_filename), bbox_inches="tight")
 

@@ -1387,9 +1387,9 @@ def plotSimilarity(similarityMatrix,orderedSamples,vmin=0,vmax=0.5,title="Simila
         pass
     ax.imshow(similarityMatrix.loc[orderedSamples,orderedSamples],cmap='viridis',vmin=vmin,vmax=vmax)
     ax.grid(False)
-    plt.title(title,FontSize=fontsize+2)
-    plt.xlabel(xlabel,FontSize=fontsize)
-    plt.ylabel(ylabel,FontSize=fontsize)
+    plt.title(title, fontsize=fontsize+2)
+    plt.xlabel(xlabel, fontsize=fontsize)
+    plt.ylabel(ylabel, fontsize=fontsize)
     if savefig is not None:
         plt.savefig(savefig,bbox_inches="tight")
     return
@@ -1503,9 +1503,9 @@ def orderMembership(centroidMatrix,membershipMatrix,mappedClusters,ylabel="",res
         ax.imshow(ordered_matrix,cmap='viridis',aspect="auto")
         ax.grid(False)
 
-        plt.title(ylabel.split("s")[0]+"Activation",FontSize=16)
-        plt.xlabel("Samples",FontSize=14)
-        plt.ylabel(ylabel,FontSize=14)
+        plt.title(ylabel.split("s")[0]+"Activation", fontsize=16)
+        plt.xlabel("Samples", fontsize=14)
+        plt.ylabel(ylabel, fontsize=14)
         if resultsDirectory is not None:
             plt.savefig(os.path.join(resultsDirectory,"binaryActivityMap.pdf"))
     return ordered_matrix
@@ -1527,8 +1527,8 @@ def plotDifferentialMatrix(overExpressedMembersMatrix,underExpressedMembersMatri
         ax.imshow(orderedDM,cmap=cmap,vmin=-1,vmax=1,aspect=aspect)
         ax.grid(False)
         if saveFile is not None:
-            plt.ylabel("Regulons",FontSize=14)
-            plt.xlabel("Samples",FontSize=14)
+            plt.ylabel("Regulons", fontsize=14)
+            plt.xlabel("Samples", fontsize=14)
             ax.grid(False)
             plt.savefig(saveFile,bbox_inches="tight")
     return orderedDM
@@ -1674,8 +1674,8 @@ def mosaic(dfr,clusterList,minClusterSize_x=4,minClusterSize_y=5,allow_singleton
         ax.imshow(dfr.loc[order_y,order_x],cmap="bwr",vmin=-1,vmax=1)
         ax.set_aspect(dfr.shape[1]/float(dfr.shape[0]))
         ax.grid(False)
-        ax.set_ylabel("Regulons",FontSize=14)
-        ax.set_xlabel("Samples",FontSize=14)
+        ax.set_ylabel("Regulons", fontsize=14)
+        ax.set_xlabel("Samples", fontsize=14)
         if saveFile is not None:
             plt.savefig(saveFile,bbox_inches="tight")
 
@@ -2189,8 +2189,8 @@ def optimize_parameters_ridge(x,y,names,srv,n_iter=10,show=True,results_director
             bottom_curve = means[i]-stds[i]
             axs1[j,i%2].fill_between(ranges[i],top_curve,bottom_curve,alpha=0.3)
             axs1[j,i%2].plot(ranges[i],mid_curve)
-            fig1.text(0.5, 0.06, "Ridge parameter", ha='center',FontSize=14)
-            fig1.text(0.02, 0.5, "AUC", va='center', rotation='vertical',FontSize=14)
+            fig1.text(0.5, 0.06, "Ridge parameter", ha='center', fontsize=14)
+            fig1.text(0.02, 0.5, "AUC", va='center', rotation='vertical', fontsize=14)
         if results_directory is not None:
             plt.savefig(os.path.join(results_directory,"Ridge_parameter_optimization.pdf"),bbox_inches="tight")
 
@@ -2217,8 +2217,8 @@ def ridge(x,y,names,lambda_min,srv,n_iter = 100,plot_label = "Ridge",results_dir
 
     plt.figure(figsize=(4,4))
     plt.boxplot(aucs)
-    plt.ylabel("AUC",FontSize=20)
-    plt.title(plot_label,FontSize=20)
+    plt.ylabel("AUC", fontsize=20)
+    plt.title(plot_label, fontsize=20)
 
     if results_directory is not None:
         plt.savefig(os.path.join(results_directory,"Ridge_AUC.pdf"),bbox_inches="tight")
@@ -2319,8 +2319,8 @@ def reduceModules(df,programs,states,stateThreshold=0.75,saveFile=None):
         ax = fig.gca()
         ax.imshow(statesDf,cmap="bwr",vmin=-1,vmax=1,aspect='auto')
         ax.grid(False)
-        ax.set_ylabel("Transcriptional programs",FontSize=14)
-        ax.set_xlabel("Samples",FontSize=14)
+        ax.set_ylabel("Transcriptional programs", fontsize=14)
+        ax.set_xlabel("Samples", fontsize=14)
         plt.savefig(saveFile,bbox_inches="tight")
 
     return statesDf
@@ -2344,8 +2344,8 @@ def programsVsStates(statesDf,states, filename=None, csvpath=None, showplot=Fals
     ax.imshow(pixel,cmap="bwr",vmin=-1,vmax=1,aspect="auto")
     ax.grid(False)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.ylabel("Transcriptional programs",FontSize=14)
-    plt.xlabel("Transcriptional states",FontSize=14)
+    plt.ylabel("Transcriptional programs", fontsize=14)
+    plt.xlabel("Transcriptional states", fontsize=14)
     if filename is not None:
         plt.savefig(filename,bbox_inches="tight")
 
@@ -2878,15 +2878,15 @@ def kmplot(srv,groups,labels,xlim_=None,filename=None,color=None,lw=1,alpha=1,fs
         if color is not None:
             if subplots is True:
                 ax = plt.gca()
-                ax.step(duration,kme,color=color[i],LineWidth=lw,alpha=alpha)
+                ax.step(duration,kme, color=color[i], linewidth=lw, alpha=alpha)
             elif subplots is False:
-                plt.step(duration,kme,color=color[i],LineWidth=lw,alpha=alpha)
+                plt.step(duration,kme, color=color[i], linewidth=lw, alpha=alpha)
         elif color is None:
             if subplots is True:
                 ax = plt.gca()
-                ax.step(duration,kme,LineWidth=lw,alpha=alpha)
+                ax.step(duration, kme, linewidth=lw, alpha=alpha)
             elif subplots is False:
-                plt.step(duration,kme,LineWidth=lw,alpha=alpha)
+                plt.step(duration, kme, linewidth=lw, alpha=alpha)
 
     if filename is not None:
         plt.savefig(filename,bbox_inches="tight")
@@ -3872,9 +3872,9 @@ def clusterInformation(causalMechanisticNetwork,key):
 def showCluster(expressionData,coexpressionModules,key):
     plt.figure(figsize=(10,10))
     plt.imshow(expressionData.loc[coexpressionModules[key],:],vmin=-1,vmax=1)
-    plt.title("Cluster Expression",FontSize=16)
-    plt.xlabel("Patients",FontSize=14)
-    plt.ylabel("Genes",FontSize=14)
+    plt.title("Cluster Expression", fontsize=16)
+    plt.xlabel("Patients", fontsize=14)
+    plt.ylabel("Genes", fontsize=14)
 
 
 # =============================================================================
@@ -4005,11 +4005,11 @@ def swarmplot(samples,survival,savefile,ylabel="Relative risk",labels = None):
 
     sns.swarmplot(x='group', y='value',data=guan_srv_df,size=7, color=[0.15,0.15,0.15],edgecolor="black")
 
-    plt.ylabel(ylabel,FontSize=24)
-    plt.xlabel("",FontSize=0)
+    plt.ylabel(ylabel, fontsize=24)
+    plt.xlabel("", fontsize=0)
     plt.ylim(-0.05,1.05)
-    plt.xticks(FontSize=18)
-    plt.yticks(FontSize=18)
+    plt.xticks(fontsize=18)
+    plt.yticks(fontsize=18)
     plt.savefig(savefile,bbox_inches="tight")
 
     return guan_srv_df
@@ -4149,16 +4149,16 @@ def iAUC(srv,mtrx,classifier,plot_all=False):
     fpr_means = np.mean(np.vstack(fpr_list),axis=0)
 
     plt.figure()
-    plt.plot(fpr_means,tpr_means+tpr_stds,'-',color="blue",LineWidth=1)
-    plt.plot(fpr_means,tpr_means-tpr_stds,'-',color="blue",LineWidth=1)
-    plt.fill_between(fpr_means, tpr_means-tpr_stds, tpr_means+tpr_stds,color="blue",alpha=0.2)
-    plt.plot(fpr_means,tpr_means,'-k',LineWidth=1.5)
-    plt.plot(np.arange(0,1.01,0.01),np.arange(0,1.01,0.01),"--r")
+    plt.plot(fpr_means, tpr_means + tpr_stds, '-', color="blue", linewidth=1)
+    plt.plot(fpr_means, tpr_means - tpr_stds, '-', color="blue", linewidth=1)
+    plt.fill_between(fpr_means, tpr_means - tpr_stds, tpr_means + tpr_stds, color="blue", alpha=0.2)
+    plt.plot(fpr_means, tpr_means, '-k', linewidth=1.5)
+    plt.plot(np.arange(0,1.01,0.01), np.arange(0,1.01,0.01),"--r")
     plt.ylim(-0.05,1.05)
     plt.xlim(-0.05,1.05)
     plt.title('Integrated AUC = {:.2f}'.format(integrated_auc))
-    plt.ylabel('Sensitivity',FontSize=14)
-    plt.xlabel('1-Specificity',FontSize=14)
+    plt.ylabel('Sensitivity', fontsize=14)
+    plt.xlabel('1-Specificity', fontsize=14)
 
     return aucs, cutoffs, tpr_list, fpr_list
 
@@ -4294,15 +4294,15 @@ def riskStratification(lbls,mtrx,guan_srv,survival_tag,classifier,resultsDirecto
     tpr_means = np.mean(np.vstack(tpr_list),axis=0)
     fpr_means = np.mean(np.vstack(fpr_list),axis=0)
 
-    if plot_any is True:
-        ax1.fill_between(fpr_means, tpr_means-tpr_stds, tpr_means+tpr_stds,color=[0,0.4,0.6],alpha=0.3)
-        ax1.plot(fpr_means,tpr_means,color=[0,0.4,0.6],LineWidth=1.5)
+    if plot_any:
+        ax1.fill_between(fpr_means, tpr_means - tpr_stds, tpr_means + tpr_stds, color=[0, 0.4, 0.6], alpha=0.3)
+        ax1.plot(fpr_means,tpr_means,color=[0, 0.4, 0.6], linewidth=1.5)
         ax1.plot(np.arange(0,1.01,0.01),np.arange(0,1.01,0.01),"--",color=[0.2,0.2,0.2])
         ax1.set_ylim(-0.05,1.05)
         ax1.set_xlim(-0.05,1.05)
         ax1.set_title('Integrated AUC = {:.2f}'.format(integrated_auc))
-        ax1.set_ylabel('Sensitivity',FontSize=14)
-        ax1.set_xlabel('1-Specificity',FontSize=14)
+        ax1.set_ylabel('Sensitivity', fontsize=14)
+        ax1.set_xlabel('1-Specificity', fontsize=14)
 
     hr_dt = mtrx.columns[lbls.astype(bool)]
     lr_dt = mtrx.columns[(1-lbls).astype(bool)]
@@ -4701,8 +4701,8 @@ def differentialActivity(regulon_matrix,reference_matrix,baseline_patients,relap
                 ax.scatter(volcano_data_.loc[highlight,"phenotype2_frequency"],volcano_data_.loc[highlight,"log2(phenotype2/phenotype1)"],color = "red",edgecolor="red",alpha=0.4,s=5)
 
         plt.ylim(-0.4+min(list(sigvoldata["log2(phenotype2/phenotype1)"])),0.4+max(list(sigvoldata["log2(phenotype2/phenotype1)"])))
-        plt.ylabel("log2(phenotype2/phenotype1)",FontSize=14)
-        plt.xlabel("log2(phenotype2/phenotype1)",FontSize=14)
+        plt.ylabel("log2(phenotype2/phenotype1)", fontsize=14)
+        plt.xlabel("log2(phenotype2/phenotype1)", fontsize=14)
 
         if savefile is not None:
             plt.savefig(savefile,bbox_inches="tight")

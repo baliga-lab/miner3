@@ -28,26 +28,26 @@ def plot_expression_stats(exp_data, outdir):
     plt.figure()
     ind_exp_data = [exp_data.iloc[:,i] for i in range(len(exp_data.columns))]
     _ = plt.boxplot(ind_exp_data)
-    plt.title("Patient expression profiles",FontSize=14)
-    plt.ylabel("Relative expression",FontSize=14)
-    plt.xlabel("Sample ID",FontSize=14)
+    plt.title("Patient expression profiles", fontsize=14)
+    plt.ylabel("Relative expression", fontsize=14)
+    plt.xlabel("Sample ID", fontsize=14)
     plt.savefig(os.path.join(outdir, "patient_expression_profiles.pdf"),
                 bbox_inches="tight")
 
     plt.figure()
     _ = plt.hist(exp_data.iloc[0,:],bins=100, alpha=0.75)
-    plt.title("Expression of single gene", FontSize=14)
-    plt.ylabel("Frequency", FontSize=14)
-    plt.xlabel("Relative expression", FontSize=14)
+    plt.title("Expression of single gene", fontsize=14)
+    plt.ylabel("Frequency", fontsize=14)
+    plt.xlabel("Relative expression", fontsize=14)
     plt.savefig(os.path.join(outdir, "expression_single_gene.pdf"),
                 bbox_inches="tight")
 
     plt.figure()
     _ = plt.hist(exp_data.iloc[:,0],bins=200,color=[0,0.4,0.8],alpha=0.75)
     plt.ylim(0, 350)
-    plt.title("Expression of single patient sample",FontSize=14)
-    plt.ylabel("Frequency", FontSize=14)
-    plt.xlabel("Relative expression", FontSize=14)
+    plt.title("Expression of single patient sample", fontsize=14)
+    plt.ylabel("Frequency", fontsize=14)
+    plt.xlabel("Relative expression", fontsize=14)
     plt.savefig(os.path.join(outdir, "expression_single_patient.pdf"),
                 bbox_inches="tight")
 
@@ -114,9 +114,9 @@ if __name__ == '__main__':
         plt.imshow(exp_data.loc[np.random.choice(exp_data.index, len(first_clusters), replace=False),:],
                    aspect="auto", cmap="viridis", vmin=-1,vmax=1)
         plt.grid(False)
-        plt.ylabel("Genes",FontSize=20)
-        plt.xlabel("Samples",FontSize=20)
-        plt.title("Random selection of genes",FontSize=20)
+        plt.ylabel("Genes", fontsize=20)
+        plt.xlabel("Samples", fontsize=20)
+        plt.title("Random selection of genes", fontsize=20)
 
         plt.savefig(os.path.join(args.outdir, "background_expression.pdf"),
                     bbox_inches="tight")
@@ -125,9 +125,9 @@ if __name__ == '__main__':
         plt.figure(figsize=(8,4))
         plt.imshow(exp_data.loc[first_clusters,:], aspect="auto", cmap="viridis", vmin=-1, vmax=1)
         plt.grid(False)
-        plt.ylabel("Genes", FontSize=20)
-        plt.xlabel("Samples", FontSize=20)
-        plt.title("First 3 clusters", FontSize=20)
+        plt.ylabel("Genes", fontsize=20)
+        plt.xlabel("Samples", fontsize=20)
+        plt.title("First 3 clusters", fontsize=20)
         plt.savefig(os.path.join(args.outdir, "first_clusters.pdf"),
                     bbox_inches="tight")
 
