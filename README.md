@@ -1,7 +1,21 @@
 # miner
 mechanistic inference of node-edge relationships
 
+# Docker image
+
+you can access a Docker image with a full MINER installation at  Docker Hub with the name ```weiju/isb-miner3```
+
+```
+$ docker pull weiju/isb-miner3
+```
+
+
+# Tools documentation
+
+Please see command line documentation at https://baliga-lab.github.io/miner3/
+
 # tutorial information
+
 A template with instructions and code for performing a miner analysis is provided in the miner/src directory. 
 
 The template can be opened using Anaconda by selecting jupyter notebook from the user interface, or by simply typing "jupyter notebook" into the command line. 
