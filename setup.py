@@ -8,11 +8,11 @@ PACKAGE_DATA = {
     }
 
 INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas', 'sklearn', 'lifelines',
-                    'matplotlib', 'seaborn', 'mygene',
+                    'matplotlib', 'seaborn', 'mygene', 'requests_toolbelt',
                     'pydot', 'graphviz', 'gql', 'chembl_webresource_client']
 setuptools.setup(
     name="isb_miner3",
-    version="1.1.1",
+    version="1.1.3",
     author="Matt Wall",
     author_email="mwall@systemsbiology.org",
     description="MINER analysis tools",

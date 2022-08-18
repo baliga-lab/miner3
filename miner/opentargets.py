@@ -11,9 +11,12 @@ import os
 import argparse
 import json
 from chembl_webresource_client.new_client import new_client
+from chembl_webresource_client.settings import Settings
 
 
 ENDPOINT_URL = "https://api.platform.opentargets.org/api/v4/graphql"
+Settings.Instance().TIMEOUT = 3
+Settings.Instance().TOTAL_RETRIES = 1
 
 
 DRUG_QUERY = """query mydrugs {
@@ -192,7 +195,7 @@ query drug_targets {
         targets {
           id
           approvedName
-          bioType
+          biotype
         }
       }
     }
@@ -215,9 +218,9 @@ query drug_targets {
 
 # CSV field delimiter
 CSV_DELIM = ','
+MAX_RESULTS = 10
 
-
-def drug_info_for_drugs(args, result_thresh=60.0):
+def drug_info_for_drugs(args, result_thresh=60.0, max_results=MAX_RESULTS):
     """retrieve all opentargets drug information for a list of drugs"""
     errors = []
     if not os.path.exists(args.outdir):
@@ -239,9 +242,12 @@ def drug_info_for_drugs(args, result_thresh=60.0):
     chembl2drug = {}
 
     for i, drug in enumerate(drugs):
-        print('%s - %d of %d' % (drug, i + 1, len(drugs)))
+        print('%s - %d of %d' % (drug, i + 1, len(drugs)), end=" ", flush=True)
         try:
             res = molecule.search(drug)
+            if len(res) > max_results:
+                res = res[:max_results]
+            print("processing %d results..." % len(res), end=" ", flush=True)
             for r in res:
                 synonyms = r['molecule_synonyms']
                 for s in synonyms:
@@ -255,6 +261,7 @@ def drug_info_for_drugs(args, result_thresh=60.0):
             chembl2drug[chembl_id] = drug
             #with open(os.path.join(args.outdir,'%s.json' % chembl_id), 'w') as outfile:
             #    outfile.write(str(res))
+            print("done.")
         except:
             print("FAILURE: could not retrieve info for molecule '%s' - skipping" % drug)
             errors.append("FAILURE: could not retrieve info for molecule '%s' - skipping" % drug)
@@ -486,8 +493,26 @@ def _drug_info_for_genes(genes, args):
     # write backgrounds
     compute_backgrounds(unique_results, args.outdir)
 
-    # (TODO) as an extra service, generate a CSV
+    # (TODO) as an extra service, generate a drug info CSV
     #print(drug_ids)
+    write_drug_csv_for_genes(unique_results, args)
+
+def write_drug_csv_for_genes(results, args):
+    """take a dictionary result from _drug_info_for_genes() and write to CSV"""
+    drug_ids = set()
+    for gene, entries in results.items():
+        for entry in entries:
+            try:
+                drug_id = entry['drug']
+                drug_ids.add(drug_id)
+            except KeyError:
+                pass  # skip if not drug id
+    drug_path = os.path.join(args.outdir, 'drug_ids.txt')
+    with open(drug_path, 'w') as outfile:
+        for drug_id in sorted(drug_ids):
+            outfile.write("%s\n" % drug_id)
+    args.drugs = drug_path
+    drug_info_for_drugs(args)
 
 
 DESCRIPTION = "get_opentargets - find opentargets data for genes and disease"
