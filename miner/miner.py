@@ -1155,7 +1155,13 @@ def tfbsdbEnrichment(task):
 
 def mechanisticInference(axes,revisedClusters,expressionData,correlationThreshold=0.3,numCores=5,p=0.05, database_path=None):
     logging.info('Running mechanistic inference')
-    tfToGenes = read_pkl(database_path)
+    if database_path.endswith(".pkl"):
+        tfToGenes = read_pkl(database_path)
+    elif database_path.endswith(".json"):
+        with open(database_path) as infile:
+            tfToGenes = json.load(infile)
+    else:
+        raise("unknown database format for tfs_to_genes")
 
     if correlationThreshold <= 0:
         allGenes = [int(len(expressionData.index))]

@@ -44,6 +44,8 @@ if __name__ == '__main__':
                         help='file name for FIRM input file, will be stored in outdir')
     parser.add_argument('--genelist', default='all_genes.txt',
                         help='file name for the gene file, will be stored in outdir')
+    parser.add_argument('--tfs2genes', default=None,
+                        help='Transcription factor to gene mapping file, either JSON or pkl')
 
     args = parser.parse_args()
 
@@ -67,12 +69,15 @@ if __name__ == '__main__':
 
     # get first principal component axes of clusters
     t1 = time.time()
-    try:
-        database_path = resource_filename(Requirement.parse("isb_miner3"),
-                                          'miner/data/network_dictionaries/{}'.format("tfbsdb_tf_to_genes.pkl"))
-    except:
-        # running from source
-        database_path = os.path.join('miner', 'data', 'network_dictionaries', 'tfbsdb_tf_to_genes.pkl')
+    if args.tfs2genes is not None:
+        database_path = args.tfs2genes
+    else:
+        try:
+            database_path = resource_filename(Requirement.parse("isb_miner3"),
+                                              'miner/data/network_dictionaries/{}'.format("tfbsdb_tf_to_genes.pkl"))
+        except:
+            # running from source
+            database_path = os.path.join('miner', 'data', 'network_dictionaries', 'tfbsdb_tf_to_genes.pkl')
 
     axes = miner.principalDf(revised_clusters, exp_data,
                              subkey=None, minNumberGenes=1)
