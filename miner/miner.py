@@ -655,7 +655,6 @@ def recursiveAlignment(geneset,expressionData,minNumberGenes=6,pct_threshold=80)
 def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamplesExcluded=0.50,
             random_state=12, overExpressionThreshold=80,pct_threshold=80):
 
-
     df = expressionData.copy()
     maxStep = int(np.round(10*maxSamplesExcluded))
     allGenesMapped = []
@@ -686,8 +685,13 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
             lowpass = min(np.percentile(pearson,5),-0.1)
             cluster1 = np.array(df.index[np.where(pearson>highpass)[0]])
             cluster2 = np.array(df.index[np.where(pearson<lowpass)[0]])
+            # WW: cluster 1 and/or cluster 2 can be empty, so we handle th
+            # case by skipping over them !!!
+            input_clusters = [clst for clst in [cluster1, cluster2] if len(clst) > 0]
+            if len(input_clusters) == 0:
+                continue
 
-            for clst in [cluster1,cluster2]:
+            for clst in input_clusters:
                 pdc = recursiveAlignment(clst,expressionData=df,minNumberGenes=minNumberGenes,pct_threshold=pct_threshold)
                 if len(pdc)==0:
                     continue
