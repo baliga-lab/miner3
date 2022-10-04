@@ -1348,6 +1348,7 @@ def f1Decomposition(sampleMembers=None,thresholdSFM=0.333,sampleFrequencyMatrix=
 
         predictedMembers = members
         predictedNonMembers = remainingMembers-predictedMembers
+        pred_non_membs_list = sorted(predictedNonMembers)
 
         sumSlice = np.sum(similarityMatrix.loc[:,list(predictedMembers)],axis=1)/float(len(predictedMembers))
         members = set(similarityMatrix.index[np.where(sumSlice>0.8)[0]])
@@ -1356,7 +1357,7 @@ def f1Decomposition(sampleMembers=None,thresholdSFM=0.333,sampleFrequencyMatrix=
             similarityClusters.append(list(predictedMembers))
             if len(predictedNonMembers)==0:
                 break
-            similarityMatrix = similarityMatrix.loc[predictedNonMembers,predictedNonMembers]
+            similarityMatrix = similarityMatrix.loc[pred_non_membs_list, pred_non_membs_list]
 
             probeSample = similarityMatrix.sum(axis=1).idxmax()
             members = set(similarityMatrix.index[np.where(similarityMatrix[probeSample]==1)[0]])
@@ -1375,7 +1376,7 @@ def f1Decomposition(sampleMembers=None,thresholdSFM=0.333,sampleFrequencyMatrix=
             similarityClusters.append(list(predictedMembers))
             if len(predictedNonMembers)==0:
                 break
-            similarityMatrix = similarityMatrix.loc[predictedNonMembers,predictedNonMembers]
+            similarityMatrix = similarityMatrix.loc[pred_non_membs_list, pred_non_membs_list]
             probeSample = similarityMatrix.sum(axis=1).idxmax()
 
             members = set(similarityMatrix.index[np.where(similarityMatrix[probeSample]==1)[0]])
@@ -2290,7 +2291,7 @@ def transcriptionalPrograms(programs,reference_dictionary):
     transcriptionalPrograms = {}
     programRegulons = {}
     p_stack = []
-    programs_flattened = np.array(programs).flatten()
+    programs_flattened = np.array(programs, dtype=object).flatten()
     for i in range(len(programs_flattened)):
         if len(np.hstack(programs_flattened[i]))>len(programs_flattened[i]):
             for j in range(len(programs_flattened[i])):
