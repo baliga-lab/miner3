@@ -128,49 +128,56 @@ def make_entrez_map(conversion_table_path):
 
 def identifierConversion(expressionData, conversion_table_path):
     idMap = pd.read_csv(conversion_table_path, sep="\t")
-    genetypes = list(set(idMap.iloc[:,2]))
-    previousIndex = np.array(expressionData.index).astype(str)
-    previousColumns = np.array(expressionData.columns).astype(str)
-    bestMatch = []
-    for geneType in genetypes:
-        subset = idMap[idMap.iloc[:,2]==geneType]
+    gene_types = list(set(idMap.iloc[:,2]))
+    original_rows = np.array(expressionData.index).astype(str)
+    original_cols = np.array(expressionData.columns).astype(str)
+    if len(set(original_rows)) < len(original_rows):
+        raise ValueError("Input expression has duplicate row names")
+
+    best_match = []
+    for gene_type in gene_types:
+        subset = idMap[idMap.iloc[:,2] == gene_type]
         subset.index = subset.iloc[:,1]
-        mappedGenes = list(set(previousIndex)&set(subset.index))
-        mappedSamples = list(set(previousColumns)&set(subset.index))
-        if len(mappedGenes)>=max(10,0.01*expressionData.shape[0]):
-            if len(mappedGenes)>len(bestMatch):
-                bestMatch = mappedGenes
-                state = "original"
-                gtype = geneType
-                continue
-        if len(mappedSamples)>=max(10,0.01*expressionData.shape[1]):
-            if len(mappedSamples)>len(bestMatch):
-                bestMatch = mappedSamples
-                state = "transpose"
-                gtype = geneType
+        # check the number of mapped rows and mapped columns to
+        # determine whether genes are used as row or column names
+        mapped_genes = list(set(original_rows)&set(subset.index))
+        mapped_samples = list(set(original_cols)&set(subset.index))
+        if len(mapped_genes)>=max(10,0.01*expressionData.shape[0]):
+            if len(mapped_genes) > len(best_match):
+                best_match = mapped_genes
+                is_transposed = False
+                gtype = gene_type
                 continue
 
-    mappedGenes = bestMatch
-    subset = idMap[idMap.iloc[:,2]==gtype]
+        if len(mapped_samples)>=max(10,0.01*expressionData.shape[1]):
+            if len(mapped_samples)>len(best_match):
+                best_match = mapped_samples
+                is_transposed = True
+                gtype = gene_type
+                continue
+
+    mapped_genes = best_match
+
+    # extract the identifiers of the matching gene type into "subset"
+    subset = idMap[idMap.iloc[:,2] == gtype]
     subset.index = subset.iloc[:,1]
 
-    if len(bestMatch) == 0:
+    if len(best_match) == 0:
         logging.warn("Error: Gene identifiers not recognized")
 
-    if state == "transpose":
+    if is_transposed:
         expressionData = expressionData.T
-
     try:
-        convertedData = expressionData.loc[mappedGenes,:]
+        convertedData = expressionData.loc[mapped_genes,:]
     except:
-        convertedData = expressionData.loc[np.array(mappedGenes).astype(int),:]
+        convertedData = expressionData.loc[np.array(mapped_genes).astype(int),:]
 
-    conversionTable = subset.loc[mappedGenes,:]
+    conversionTable = subset.loc[mapped_genes,:]
     conversionTable.index = conversionTable.iloc[:,0]
     conversionTable = conversionTable.iloc[:,1]
     conversionTable.columns = ["Name"]
 
-    newIndex = list(subset.loc[mappedGenes,"Preferred_Name"])
+    newIndex = list(subset.loc[mapped_genes,"Preferred_Name"])
     convertedData.index = newIndex
 
     duplicates = [item for item, count in Counter(newIndex).items() if count > 1]
