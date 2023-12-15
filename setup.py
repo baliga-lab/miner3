@@ -7,12 +7,12 @@ PACKAGE_DATA = {
     'miner': ['data/*', 'data/network_dictionaries/*']
     }
 
-INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas', 'sklearn', 'lifelines',
+INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas', 'scikit-learn', 'lifelines',
                     'matplotlib', 'seaborn', 'mygene', 'requests_toolbelt',
                     'pydot', 'graphviz', 'gql', 'chembl_webresource_client']
 setuptools.setup(
     name="isb_miner3",
-    version="1.1.6",
+    version="1.1.7",
     author="Matt Wall",
     author_email="mwall@systemsbiology.org",
     description="MINER analysis tools",
