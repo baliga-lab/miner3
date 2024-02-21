@@ -106,13 +106,20 @@ def compute_backgrounds(gene_opentargets, outdir):
         json.dump(num_mechanism_of_action, outfile)
 
 
-def get_drugs(client, gene, all_diseases, diseases, trial_phase=None):
+def get_drugs(client, gene, all_diseases, diseases, included_diseases, trial_phase=None):
     query = gql(DRUG_QUERY % gene)
     result = client.execute(query)
+    if result['target'] is None or result['target']['associatedDiseases'] is None:
+        return []
     diseases = result['target']["associatedDiseases"]["rows"]
     results = []
     for item in diseases:
         disease = item['disease']
+
+        # check for included diseases
+        if included_diseases is not None and len(included_diseases) > 0:
+            if disease["name"] not in included_diseases:
+                continue
 
         if disease["knownDrugs"] is None:
             drugs = []
@@ -262,7 +269,7 @@ def drug_info_for_drugs(args, result_thresh=60.0, max_results=MAX_RESULTS):
             #with open(os.path.join(args.outdir,'%s.json' % chembl_id), 'w') as outfile:
             #    outfile.write(str(res))
             print("done.")
-        except:
+        except Exception as e:
             print("FAILURE: could not retrieve info for molecule '%s' - skipping" % drug)
             errors.append("FAILURE: could not retrieve info for molecule '%s' - skipping" % drug)
 
@@ -449,20 +456,21 @@ def drug_info_for_genes(args):
 def _drug_info_for_genes(genes, args):
     """Central workhorse function"""
     all_results = {}
-    all_diseases = defaultdict(int)
     num_genes = len(genes)
-    diseases = set(args.disease)
+    included_diseases = set(args.disease)
     if args.disease_file is not None:
         with open(args.disease_file) as infile:
             for d in infile:
-                diseases.add(d.strip())
-    print("Diseases: " + str(diseases))
+                included_diseases.add(d.strip())
+    print("Diseases: " + str(included_diseases))
 
     tp = RequestsHTTPTransport(url=ENDPOINT_URL,
                                verify=True, retries=3)
 
     client = Client(transport=tp, fetch_schema_from_transport=True)
+    # encountered diseases in the results
     diseases = set([])
+    # disease counter
     all_diseases = defaultdict(int)
     trial_phase = None
     drug_ids = set()
@@ -470,12 +478,13 @@ def _drug_info_for_genes(genes, args):
     for i, gene in enumerate(genes):
         print('%s - %d of %d' % (gene, i + 1, num_genes))
         try:
-            result = get_drugs(client, gene, all_diseases, diseases, trial_phase)
+            result = get_drugs(client, gene, all_diseases, diseases, included_diseases, trial_phase)
             for drug in result:
                 drug_ids.add(drug['drug']['id'])
             all_results[gene] = result
         except:
             print("FAILURE: could not retrieve info for gene '%s' - skipping" % gene)
+            raise
 
 
     with open(os.path.join(args.outdir, 'diseases.tsv'), 'w') as outfile:
