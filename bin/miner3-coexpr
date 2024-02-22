@@ -17,7 +17,7 @@ import logging
 from miner import GIT_SHA
 from miner import __version__ as MINER_VERSION
 from miner import util
-from miner import miner
+from miner import miner_py3 as miner
 
 DESCRIPTION = """miner3-coexpr - MINER cluster expression data.
 MINER Version %s (Git SHA %s)""" % (str(MINER_VERSION).replace('miner3 ', ''),
