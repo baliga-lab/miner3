@@ -1554,23 +1554,31 @@ def tfbsdbEnrichment(task):
 
     return clusterTfs
 
-def mechanisticInference(axes,revisedClusters,expressionData,correlationThreshold=0.3,numCores=5,p=0.05,database="tfbsdb_tf_to_genes.pkl",dataFolder=os.path.join(os.path.split(os.getcwd())[0],"data"),override_database=None):
-    import os
-    
+#def mechanisticInference(axes,revisedClusters,expressionData,correlationThreshold=0.3,numCores=5,p=0.05,database="tfbsdb_tf_to_genes.pkl",dataFolder=os.path.join(os.path.split(os.getcwd())[0],"data"),override_database=None):
+def mechanisticInference(axes,revisedClusters,expressionData,correlationThreshold=0.3,numCores=5,p=0.05,
+                         database_path=None):
     print('Running mechanistic inference')
-    
+    """
     if override_database is None:
         tfToGenesPath = os.path.join(dataFolder,"network_dictionaries",database)
         tfToGenes = read_pkl(tfToGenesPath)
-        
     elif override_database is not None:
         tfToGenes = override_database
-     
+    """
+    if database_path.endswith(".pkl"):
+        print("READING TFBS2GENES: ", database_path)
+        tfToGenes = read_pkl(database_path)
+    elif database_path.endswith(".json"):
+        with open(database_path) as infile:
+            tfToGenes = json.load(infile)
+    else:
+        raise("unknown database format for tfs_to_genes")
+
     if correlationThreshold <= 0:
         allGenes = [int(len(expressionData.index))]
     elif correlationThreshold > 0:
         allGenes = list(expressionData.index)
-        
+
     tfs = list(tfToGenes.keys())     
     tfMap = axisTfs(axes,tfs,expressionData,correlationThreshold=correlationThreshold) 
     taskSplit = splitForMultiprocessing(list(revisedClusters.keys()),numCores)
@@ -1865,6 +1873,7 @@ def f1Decomposition(sampleMembers=None,thresholdSFM=0.333,sampleFrequencyMatrix=
 
         predictedMembers = members
         predictedNonMembers = remainingMembers-predictedMembers
+        pred_non_membs_list = sorted(predictedNonMembers)
 
         tmp_overlap = intersect(predictedMembers,similarityMatrix.columns)
         sumSlice = np.sum(similarityMatrix.loc[:,tmp_overlap],axis=1)/float(len(tmp_overlap))
@@ -1874,7 +1883,8 @@ def f1Decomposition(sampleMembers=None,thresholdSFM=0.333,sampleFrequencyMatrix=
             similarityClusters.append(list(predictedMembers))
             if len(predictedNonMembers)==0:
                 break    
-            similarityMatrix = similarityMatrix.loc[predictedNonMembers,predictedNonMembers]
+            #similarityMatrix = similarityMatrix.loc[predictedNonMembers,predictedNonMembers]
+            similarityMatrix = similarityMatrix.loc[pred_non_membs_list, pred_non_membs_list]
             probeSample = similarityMatrix.sum(axis=1).idxmax()
             members = set(similarityMatrix.index[np.where(similarityMatrix[probeSample]==1)[0]])
             remainingMembers = predictedNonMembers
@@ -1892,7 +1902,8 @@ def f1Decomposition(sampleMembers=None,thresholdSFM=0.333,sampleFrequencyMatrix=
             similarityClusters.append(list(predictedMembers))
             if len(predictedNonMembers)==0:
                 break
-            similarityMatrix = similarityMatrix.loc[predictedNonMembers,predictedNonMembers]
+            #similarityMatrix = similarityMatrix.loc[predictedNonMembers,predictedNonMembers]
+            similarityMatrix = similarityMatrix.loc[pred_non_membs_list, pred_non_membs_list]
             probeSample = similarityMatrix.sum(axis=1).idxmax()
             members = set(similarityMatrix.index[np.where(similarityMatrix[probeSample]==1)[0]])
             remainingMembers = predictedNonMembers
@@ -3391,7 +3402,7 @@ def reduceModules(df,programs,states,stateThreshold=0.75,saveFile=None):
         
     return statesDf
 
-def programsVsStates(statesDf,states,filename=None,showplot=False):
+def programsVsStates(statesDf,states,filename=None, csvpath=None, showplot=False):
     pixel = np.zeros((statesDf.shape[0],len(states)))
     for i in range(statesDf.shape[0]):
         for j in range(len(states)):
@@ -3399,10 +3410,11 @@ def programsVsStates(statesDf,states,filename=None,showplot=False):
 
     pixel = pd.DataFrame(pixel)
     pixel.index = statesDf.index
+    pixel.to_csv(csvpath, sep='\t')
 
     if showplot is False:
         return pixel
-    
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.imshow(pixel,cmap="bwr",vmin=-1,vmax=1,aspect="auto")
@@ -7602,3 +7614,14 @@ def generateRegulonActivity(regulonModules, expressionData, p=0.05, returnBkgd="
         out=dfr_programs
     
     return out       
+
+
+def make_entrez_map(conversion_table_path):
+    result = {}
+    idMap = pd.read_csv(conversion_table_path, sep="\t")
+    genetypes = list(set(idMap.iloc[:,2]))
+    for index, row in idMap.iterrows():
+        preferred, name, source = row
+        if source.startswith('Entrez'):
+            result[preferred] = name
+    return result

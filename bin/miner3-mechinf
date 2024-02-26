@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import logging
 from pkg_resources import Requirement, resource_filename
 
-from miner import miner, util, GIT_SHA
+from miner import miner_py3 as miner, util, GIT_SHA
 from miner import __version__ as MINER_VERSION
 
 
