@@ -9,7 +9,7 @@ import os
 
 import matplotlib
 matplotlib.use('Agg')
-from miner import miner_py3 as miner, util
+from miner import miner, util
 from miner import GIT_SHA, __version__ as pkg_version
 
 
