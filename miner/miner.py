@@ -2116,16 +2116,15 @@ def plotDifferentialMatrix(overExpressedMembersMatrix,underExpressedMembersMatri
     return orderedDM
 
 def kmeans(df,numClusters,random_state=None):
-    from sklearn.cluster import KMeans
 
     if random_state is not None:
         # Number of clusters
-        kmeans = KMeans(n_clusters=numClusters,random_state=random_state)
+        kmeans = KMeans(n_clusters=numClusters,random_state=random_state, n_init=10)
 
-    elif random_state is None:    
+    elif random_state is None:
         # Number of clusters
-        kmeans = KMeans(n_clusters=numClusters)
-    
+        kmeans = KMeans(n_clusters=numClusters, n_init=10)
+
     # Fitting the input data
     kmeans = kmeans.fit(df)
     # Getting the cluster labels

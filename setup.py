@@ -7,10 +7,17 @@ PACKAGE_DATA = {
     'miner': ['data/*', 'data/network_dictionaries/*']
     }
 
-INSTALL_REQUIRES = ['numpy', 'scipy', 'pandas', 'scikit-learn', 'lifelines',
-                    'matplotlib', 'seaborn', 'mygene', 'requests_toolbelt',
-                    'pydot', 'graphviz', 'gql', 'chembl_webresource_client',
-                    'tqdm']
+INSTALL_REQUIRES = ['numpy>=1.22.0', 'scipy>=1.8.0', 'pandas>=2.0.0', 'scikit-learn>=1.1.3',
+                    'lifelines>=0.27.4',
+                    'matplotlib>=3.6.0',
+                    'seaborn>=0.12.0',
+                    'mygene>=3.2.2',
+                    'requests_toolbelt>=1.0.0',
+                    'pydot>=2.0.0',
+                    'graphviz>=0.20.1',
+                    'gql>=3.4.0',
+                    'chembl_webresource_client>=0.10.8',
+                    'tqdm>=4.64.0']
 setuptools.setup(
     name="isb_miner3",
     version="1.1.9",
