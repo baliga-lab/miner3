@@ -25,6 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('mapfile', help="identifier mapping file")
     parser.add_argument('networkdir', help="network result directory")
     parser.add_argument('survfile', help="survival data CSV file")
+    parser.add_argument('translocfile', help="translocation data CSV file")
     parser.add_argument('outdir', help="output directory")
     parser.add_argument('--skip_tpm', action="store_true",
                         help="overexpression threshold")
@@ -41,6 +42,8 @@ if __name__ == '__main__':
         util.write_dependency_infos(outfile)
 
     exp_data, conv_table = miner.preprocess(args.expfile, args.mapfile, do_preprocess_tpm=(not args.skip_tpm))
+
+    translocations = pd.read_csv(args.translocfile,index_col=0,header=0)
 
     regulon_modules = miner.read_json(os.path.join(args.networkdir, "regulons.json"))
 
@@ -154,7 +157,6 @@ if __name__ == '__main__':
     underexpressed_members_matrix_pr = miner.membershipToIncidence(underexpressed_members_pr,
                                                                    exp_data)
 
-    """
     #### This figure requires mutations, so we excluded it
     # Substratify t(4;14)
     t414_patients = miner.getMutations("RNASeq_WHSC1_Call", translocations)
@@ -171,7 +173,7 @@ if __name__ == '__main__':
     other_t414 = miner.setdiff(t414_patients, miner.union(pr68up_pr61dn, pr68up_not_pr61dn))
 
     # plot comparison
-    srv = guanSurvivalDfMMRF.copy()
+    srv = guan_survival_df_mmrf.copy()
     groups = [other_t414, pr68up_not_pr61dn, pr68up_pr61dn]
     labels = ["Other t(4;14)", "Pr-68(+) Not Pr-61(-)", "Pr-68(+) & Pr-61(-)"]
     colors = [[0.6,0.6,0.6], "blue", "red"]
@@ -187,8 +189,6 @@ if __name__ == '__main__':
     ax.tick_params(axis="y", colors="black")
 
     plt.savefig(os.path.join(args.outdir, "kmplots_t414.pdf"), bbox_inches="tight")
-    """
-
 
     cox_programs_output = miner.parallelMedianSurvivalAnalysis(pr_genes,
                                                                exp_data,
@@ -351,7 +351,6 @@ if __name__ == '__main__':
     #
     # GENERATE BOXPLOT DATA FOR TRANSCRIPTIONAL STATES
     #
-    """
     survival_patients = list(guan_survival_df_mmrf.index)
     t414_patients = translocations.columns[
         np.where(translocations.loc["RNASeq_WHSC1_Call",:]==1)[0]
@@ -398,20 +397,74 @@ if __name__ == '__main__':
     rank_order = np.array(list(set(np.hstack(boxplot_names))))[np.argsort(ranks)]
     ranked_t414 = np.array(percent_t414)[np.argsort(ranks)]
     ranked_t1114 = np.array(percent_t1114)[np.argsort(ranks)]
-    """
 
     #
-    # TODO VIOLIN PLOTS BY STATES
+    # VIOLIN PLOTS BY STATES
     #
+    f, ax = plt.subplots(figsize=(12, 2))
+
+    # Plot the orbital period with horizontal boxes
+    #sns.violinplot(x="label", y="GuanScore", data=plot_data,
+    #               palette="coolwarm",order=rank_order)
+    sns.violinplot(x="label", y="GuanScore", data=plot_data,
+                   palette="coolwarm", order=rank_order, legend=False)
+
+    # Add in points to show each observation
+    sns.stripplot(x="label", y="GuanScore", data=plot_data,
+                  size=2, color=".3", linewidth=0,order=rank_order)
+
+    # Tweak the visual presentation
+    ax.set(ylabel="")
+    ax.set(xlabel="")
+
+    # Save figure
+    plt.savefig(os.path.join(args.outdir, "violin_states_risk.pdf"), bbox_inches="tight")
 
     #
-    # TODO BOXPLOTS BY STATES
+    # BOXPLOTS BY STATES
     #
+    f, ax = plt.subplots(figsize=(11.27, 2))
+
+    # Plot the orbital period with horizontal boxes
+    sns.boxplot(x="label", y="GuanScore", data=plot_data,fliersize=0,
+                palette="coolwarm",order=rank_order)
+
+    # Add in points to show each observation
+    sns.stripplot(x="label", y="GuanScore", data=plot_data,
+                  size=2, color=".3", linewidth=0,order=rank_order)
+
+    # Tweak the visual presentation
+    ax.set(ylabel="")
+    ax.set(xlabel="")
+    ax.set(ylim=(-0.1,1.1))
+    ax.set(yticks=np.arange(0,1.05,0.2))
+    ax.tick_params(labelsize=12)
+    ax.tick_params(axis="x", colors="black")
+    ax.tick_params(axis="y", colors="black")
+
+    # Save figure
+    plt.savefig(os.path.join(args.outdir, "boxplot_states_risk.pdf"),bbox_inches="tight")
 
     #
-    # TODO BOXPLOTS BY STATES
+    # t(4;14) and t(11;14) subtypes by states
     #
+    plt.figure(figsize=(11.27, 2))
 
-    #
-    # TODO t(4;14) and t(11;14) subtypes by states
-    #
+    N = len(ranks)
+    ind = np.arange(N)    # the x locations for the groups
+    w = 0.6
+    p1 = plt.bar(ind, 100*ranked_t1114,width=w,color='#0A6ECC',edgecolor="white",alpha=1)
+    p2 = plt.bar(ind, 100*ranked_t414,
+                 bottom=100*ranked_t1114,width=w,color='#E53939',edgecolor="white",alpha=1)
+
+    plt.xlim(-0.5,N-0.5)
+    plt.ylim(-5,110)
+    plt.yticks(np.arange(0,105,20),fontsize = 12)
+    plt.xticks(ticks=range(len(rank_order)),labels=list(rank_order),fontsize = 12)
+    plt.legend((p1[0], p2[0]), ('t(11;14)', 't(4;14)'),loc="upper left")
+
+    ax = plt.gca()
+    ax.tick_params(axis="x", colors="black")
+    ax.tick_params(axis="y", colors="black")
+
+    plt.savefig(os.path.join(args.outdir, "barplot_states_translocations.pdf"),bbox_inches="tight")
