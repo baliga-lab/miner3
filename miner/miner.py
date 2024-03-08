@@ -335,16 +335,15 @@ def readExpressionFromGZipFiles(directory):
     return expressionData
 
 def readCausalFiles(directory):
-
-    rootDir = directory
     sample_dfs = []
-    for dirName, subdirList, fileList in os.walk(rootDir):
-        for fname in fileList:
+    for subdir in os.listdir(directory):
+        for fname in os.listdir(os.path.join(directory, subdir)):
             #print('\t%s' % fname)
             extension = fname.split(".")[-1]
             if extension == 'csv':
-                path = os.path.join(rootDir,dirName,fname)
-                df = pd.read_csv(path, index_col=0,header=0)
+                path = os.path.join(directory, subdir, fname)
+                #print("READING CAUSAL RESULTS FROM \"%s\"" % path)
+                df = pd.read_csv(path, index_col=0, header=0)
                 df.index = np.array(df.index).astype(str)
                 sample_dfs.append(df)
 
