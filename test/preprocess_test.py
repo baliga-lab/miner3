@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 import sys
-import unittest
-import xmlrunner
+import pytest
 
-import pandas as pd
+#import pandas as pd
 from miner import miner
-import logging
+
+"""
 
 class PreprocessTest(unittest.TestCase):
 
-    """
     def test_remove_null_rows_min_0_remove_ok(self):
         df = pd.DataFrame([[0, 1, 2], [1, 2, 3], [0, 0, 0], [4, 5, 6]])
         df2 = miner.remove_null_rows(df)
@@ -51,24 +50,14 @@ class PreprocessTest(unittest.TestCase):
         for i in range(3):
             for j in range(3):
                 self.assertAlmostEquals(df2.values[i, j], -0.8164965809277261)
-    """
 
-    """
     def test_preprocess_main_simple(self):
         exp, conv_table = miner.preprocess('testdata/exp_data-001.csv', 'testdata/conv_table-001.tsv')
         self.assertEquals((10, 3), exp.shape)
         for i in range(3):
             for j in range(3):
                 self.assertAlmostEquals(exp.values[i, j], -0.8164965809277261)
-    """
+"""
 
-if __name__ == '__main__':
-    SUITE = []
-    LOG_FORMAT = '%(asctime)s %(message)s'
-    logging.basicConfig(format=LOG_FORMAT, level=logging.DEBUG,
-                        datefmt='%Y-%m-%d %H:%M:%S \t')
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(PreprocessTest))
-    if len(sys.argv) > 1 and sys.argv[1] == 'xml':
-      xmlrunner.XMLTestRunner(output='test-reports').run(unittest.TestSuite(SUITE))
-    else:
-      unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
+def test_dummy():
+    pass
