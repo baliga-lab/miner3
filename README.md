@@ -1,4 +1,7 @@
-# miner
+# MINER
+
+![Unit tests](https://github.com/baliga-lab/miner3/actions/workflows/python-test.yml/badge.svg)
+
 mechanistic inference of node-edge relationships
 
 # Docker image
