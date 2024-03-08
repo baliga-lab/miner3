@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import unittest
+import xmlrunner
 
 import pandas as pd
 from miner import miner
