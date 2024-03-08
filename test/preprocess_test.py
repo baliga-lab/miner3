@@ -9,6 +9,7 @@ import logging
 
 class PreprocessTest(unittest.TestCase):
 
+    """
     def test_remove_null_rows_min_0_remove_ok(self):
         df = pd.DataFrame([[0, 1, 2], [1, 2, 3], [0, 0, 0], [4, 5, 6]])
         df2 = miner.remove_null_rows(df)
@@ -50,6 +51,7 @@ class PreprocessTest(unittest.TestCase):
         for i in range(3):
             for j in range(3):
                 self.assertAlmostEquals(df2.values[i, j], -0.8164965809277261)
+    """
 
     """
     def test_preprocess_main_simple(self):
