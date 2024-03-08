@@ -17,7 +17,7 @@ INSTALL_REQUIRES = ['numpy>=1.22.0', 'scipy>=1.8.0', 'pandas>=2.0.0', 'scikit-le
                     'graphviz>=0.20.1',
                     'gql>=3.4.0',
                     'chembl_webresource_client>=0.10.8',
-                    'tqdm>=4.64.0']
+                    'tqdm>=4.64.0', "xmlrunner>=1.7.7"]
 setuptools.setup(
     name="isb_miner3",
     version="1.1.9",

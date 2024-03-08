@@ -68,13 +68,13 @@ def uniqify(gene_drugs):
             out[gene] = []
     return out
 
-
+"""
 def item_meets_criteria(item, diseases, trial_phase):
     if len(diseases) == 0:
         return 'drug' in item and (trial_phase is None or get_drug_trial_phase(item) == trial_phase)
 
     return ('drug' in item and item['disease']['efo_info']['label'] in diseases and
-            (trial_phase is None or get_drug_trial_phase(item) == trial_phase))
+            (trial_phase is None or get_drug_trial_phase(item) == trial_phase))"""
 
 
 def compute_backgrounds(gene_opentargets, outdir):
