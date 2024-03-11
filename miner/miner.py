@@ -162,20 +162,16 @@ def download_file_from_google_drive(id, destination):
 # Functions used for pre-processing data
 # =============================================================================
 
-def removeNullRows(df):
-    
+def remove_null_rows(df):
     minimum = np.percentile(df,0)
     if minimum == 0:
         filteredDf = df.loc[df.sum(axis=1)>0,:]
     else:
         filteredDf = df
-        
     return filteredDf
 
 def convertToEnsembl(df,conversionTable,input_format=None):
-    
     from collections import Counter
-    
     # Index Conversion table on ENSG notation
     conversionTableEnsg = conversionTable.copy()
     conversionTableEnsg.index = conversionTableEnsg.iloc[:,0]
@@ -554,7 +550,7 @@ def zscore(expressionData):
     print("completed z-transformation.")
     return transform
 
-def correctBatchEffects(df, do_preprocess_tpm):
+def correct_batch_effects(df, do_preprocess_tpm):
 
     zscoredExpression = zscore(df)
     means = []
@@ -573,8 +569,8 @@ def correctBatchEffects(df, do_preprocess_tpm):
 
 def preprocess(filename, mapfile, convert_ids=True, do_preprocess_tpm=True):
     rawExpression = readFileToDf(filename)
-    rawExpressionZeroFiltered = removeNullRows(rawExpression)
-    zscoredExpression = correctBatchEffects(rawExpressionZeroFiltered, do_preprocess_tpm)
+    rawExpressionZeroFiltered = remove_null_rows(rawExpression)
+    zscoredExpression = correct_batch_effects(rawExpressionZeroFiltered, do_preprocess_tpm)
     if convert_ids:
         expressionData, conversionTable = identifierConversion(zscoredExpression, mapfile)
         return expressionData, conversionTable
@@ -582,7 +578,7 @@ def preprocess(filename, mapfile, convert_ids=True, do_preprocess_tpm=True):
         return zscoredExpression
 
 # =============================================================================
-# Functions used for clustering 
+# Functions used for clustering
 # =============================================================================
 
 def pearson_array(array,vector):    
