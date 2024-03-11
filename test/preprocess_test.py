@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import os
 import pytest
 
 #import pandas as pd
@@ -61,3 +62,6 @@ class PreprocessTest(unittest.TestCase):
 
 def test_dummy():
     pass
+
+def test_has_testdir():
+    assert os.path.exists('miner_mindata')
