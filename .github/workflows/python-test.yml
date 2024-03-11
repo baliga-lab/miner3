@@ -25,8 +25,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: Download and extract test data
       run: |
-      	wget https://networks.systemsbiology.net/downloads/miner-examples/miner_mindata.tar.gz
-	tar xfz miner_mindata.tar.gz
+        wget https://networks.systemsbiology.net/downloads/miner-examples/miner_mindata.tar.gz
+        tar xfz miner_mindata.tar.gz
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
