@@ -50,6 +50,8 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
+  --skip_tpm            skip TPM preprocessing for single cell data
+  --tfs2genes FILE      override TF to genes mapping (pickle or JSON file)
   -mc MINCORR, --mincorr MINCORR
                         minimum correlation
 </pre></div>
@@ -68,6 +70,8 @@ optional arguments:
 <p>In addition, you can specify the following optional arguments:</p>
 <blockquote>
 <div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--skip_tpm</span></code>: to skip the TPM preprocessing step for single-cell data</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--tfs2genes</span></code>: provide alternative TF to genes mapping for computation</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--mincorr</span></code> or <code class="docutils literal notranslate"><span class="pre">--mc</span></code>: the minimum correlation value.</p></li>
 </ul>
 </div></blockquote>
