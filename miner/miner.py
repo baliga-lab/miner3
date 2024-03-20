@@ -327,9 +327,9 @@ def convert_ids_orig(exp_data, conversion_file_path):
 
     # The corrections handling handles duplications in the data
     # Technically, this should not be done in identifier conversion
-    correctionsDf = pd.concat(corrections, axis=0)
-    uncorrectedData = convertedData.loc[singles, :]
-    convertedData = pd.concat([uncorrectedData, correctionsDf], axis=0)
+    corrections_df = pd.concat(corrections, axis=0)
+    uncorrected_data = converted_data.loc[singles, :]
+    converted_data = pd.concat([uncorrected_data, corrections_df], axis=0)
 
     print("completed identifier conversion.\n%d genes were converted. %d genes were dropped due to identifier mismatch" % (converted_data.shape[0], len(dropped_genes)))
     return converted_data, conv_table
