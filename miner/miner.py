@@ -234,7 +234,7 @@ def AffyToEnsemblDf(validation_path,expressionData_file,conversionTable_file,ref
         ensembl = expressionData_ensembl.loc[gene,"Ensembl"]
         tmp = np.array(expressionData_matrix.loc[gene,:])
         if type(ensembl) is not str:
-            ensembl = list(ensembl) 
+            ensembl = list(ensembl)
             for j in range(len(ensembl)):
                 tmp_ensembl = ensembl[j]
                 converted_expression.loc[tmp_ensembl,:] = tmp
@@ -245,6 +245,100 @@ def AffyToEnsemblDf(validation_path,expressionData_file,conversionTable_file,ref
     converted_expression.to_csv(output_file)
     return converted_expression
 
+
+def convert_ids_orig(exp_data, conversion_file_path):
+    """
+    Original table based conversion. This is needlessly complicated and
+    just kept here for legacy purposes.
+    It attempts to find out if the genes are specified in the first column or
+    the first row of the input matrix and what type of identifier it uses
+    """
+    id_map = pd.read_csv(conversion_file_path, sep="\t")
+    genetypes = sorted(set(id_map.iloc[:, 2]))
+    exp_index = np.array(exp_data.index).astype(str)
+    exp_columns = np.array(exp_data.columns).astype(str)
+    mapped_genes = []
+    transposed = False
+
+    for geneType in genetypes:
+        subset = id_map[id_map.iloc[:, 2] == geneType]
+        subset.index = subset.iloc[:, 1]
+        matching_rows = list(set(exp_index) & set(subset.index))
+        matching_cols = list(set(exp_columns) & set(subset.index))
+
+        if len(matching_rows) > len(mapped_genes):
+            mapped_genes = matching_rows
+            transposed = False
+            gtype = geneType
+            continue
+
+        if len(matching_cols) > len(mapped_genes):
+            mapped_genes = matching_cols
+            transposed = True
+            gtype = geneType
+            continue
+
+    if len(mapped_genes) == 0:
+        print("Error: Gene identifiers not recognized")
+
+    if transposed:
+        exp_data = exp_data.T
+
+    converted_data = exp_data.loc[mapped_genes, :]
+
+    # build a conversion table based on the actual existing identifiers in the
+    # input data by taking the subset of input identifier map
+    subset = id_map[id_map.iloc[:,2] == gtype]
+    subset.index = subset.iloc[:, 1]
+    conv_table = subset.loc[mapped_genes, :]
+    conv_table.index = conv_table.iloc[:, 0]
+    conv_table = conv_table.iloc[:, 1]
+    conv_table.columns = ["Name"]
+
+    new_index = list(subset.loc[mapped_genes, "Preferred_Name"])
+    converted_data.index = new_index
+
+    # conv_table is a data frame ||preferred name | name ||
+    # make the conversion table into a dictionary for the unmapped check
+    id_dict = {}
+    for idx, item in conv_table.items():
+        id_dict[item] = idx
+
+    # check for unmapped data
+    comp_new_index = set(new_index)
+    dropped_genes = []
+    for i, idx in enumerate(exp_data.index):
+        if not idx in id_dict:
+            dropped_genes.append((i, idx))
+
+    # Check for duplicates
+    duplicates = [item for item, count in Counter(new_index).items() if count > 1]
+    singles = list(set(converted_data.index) - set(duplicates))
+
+    corrections = []
+    for duplicate in duplicates:
+        dup_data = converted_data.loc[duplicate, :]
+        first_choice = pd.DataFrame(dup_data.iloc[0, :]).T
+        corrections.append(first_choice)
+
+    if len(corrections) == 0:
+        print("completed identifier conversion.\n%d genes were converted. %d genes were dropped due to identifier mismatch" % (converted_data.shape[0], len(dropped_genes)))
+        return converted_data, conv_table
+
+    # The corrections handling handles duplications in the data
+    # Technically, this should not be done in identifier conversion
+    correctionsDf = pd.concat(corrections, axis=0)
+    uncorrectedData = convertedData.loc[singles, :]
+    convertedData = pd.concat([uncorrectedData, correctionsDf], axis=0)
+
+    print("completed identifier conversion.\n%d genes were converted. %d genes were dropped due to identifier mismatch" % (converted_data.shape[0], len(dropped_genes)))
+    return converted_data, conv_table
+
+
+"""
+IDENTIFIER CONVERSION START
+THIS IS JUST FOR REFERENCE !!!! DON'T USE !!!!!
+"""
 def identifierConversion(expressionData, conversionTable=os.path.join("..","data","identifier_mappings.txt")):    
     idMap = pd.read_csv(conversionTable,sep="\t")
     genetypes = list(set(idMap.iloc[:,2]))
@@ -256,14 +350,14 @@ def identifierConversion(expressionData, conversionTable=os.path.join("..","data
         subset.index = subset.iloc[:,1]
         mappedGenes = list(set(previousIndex)&set(subset.index))
         mappedSamples = list(set(previousColumns)&set(subset.index))
-        if len(mappedGenes)>=max(10,0.01*expressionData.shape[0]):
-            if len(mappedGenes)>len(bestMatch):
+        #if len(mappedGenes)>=max(10,0.01*expressionData.shape[0]):
+        if len(mappedGenes)>len(bestMatch):
                 bestMatch = mappedGenes
                 state = "original"
                 gtype = geneType
                 continue
-        if len(mappedSamples)>=max(10,0.01*expressionData.shape[1]):
-            if len(mappedSamples)>len(bestMatch):
+        #if len(mappedSamples)>=max(10,0.01*expressionData.shape[1]):
+        if len(mappedSamples)>len(bestMatch):
                 bestMatch = mappedSamples
                 state = "transpose"
                 gtype = geneType
@@ -313,6 +407,14 @@ def identifierConversion(expressionData, conversionTable=os.path.join("..","data
     
     return convertedData, conversionTable
 
+"""
+IDENTIFIER CONVERSION END
+"""
+
+
+
+
+
 def readExpressionFromGZipFiles(directory):
 
     rootDir = directory
@@ -349,7 +451,6 @@ def readCausalFiles(directory):
     return causalData
 
 def entropy(vector):
-    
     data = np.array(vector)
     #hist = np.histogram(data,bins=50,)[0]
     hist = np.histogram(data[~np.isnan(data)],bins=50,)[0]
@@ -378,14 +479,14 @@ def quantile_norm(df,axis=1):
     import pandas as pd
     from scipy.stats import rankdata
 
-    if axis == 1:    
+    if axis == 1:
         array = np.array(df)
-        
-        ranked_array = np.zeros(array.shape)    
+
+        ranked_array = np.zeros(array.shape)
         for i in range(0,array.shape[0]):
             ranked_array[i,:] = rankdata(array[i,:],method='min') - 1
-            
-        sorted_array = np.zeros(array.shape)    
+
+        sorted_array = np.zeros(array.shape)
         for i in range(0,array.shape[0]):
             sorted_array[i,:] = np.sort(array[i,:])
             
@@ -419,11 +520,11 @@ def quantile_norm(df,axis=1):
             for j in range(0,array.shape[1]):
                 #quant_norm_array[i,j] = qn_values[int(ranked_array[i,j])]
                 quant_norm_array[i,j] = qn_values[ranked_array[i,j].astype(np.int64)]
-        
+
         quant_norm = pd.DataFrame(quant_norm_array)
         quant_norm.columns = list(df.columns)
         quant_norm.index = list(df.index)
-                
+
     return quant_norm
 
 def transformFPKM(expressionData,fpkm_threshold=1,minFractionAboveThreshold=0.5,highlyExpressed=False,quantile_normalize=False):
@@ -436,7 +537,7 @@ def transformFPKM(expressionData,fpkm_threshold=1,minFractionAboveThreshold=0.5,
     keepers = np.where(cnz>=int(minFractionAboveThreshold*expDataCopy.shape[1]))[0]
     threshold_genes = expressionData.index[keepers]
     expDataFiltered = expressionData.loc[threshold_genes,:]
-    
+
     if highlyExpressed is True:
         median = np.median(np.median(expDataFiltered,axis=1))
         expDataCopy = expDataFiltered.copy()
@@ -444,23 +545,21 @@ def transformFPKM(expressionData,fpkm_threshold=1,minFractionAboveThreshold=0.5,
         expDataCopy[expDataCopy>0]=1
         cnz = np.count_nonzero(expDataCopy,axis=1)
         keepers = np.where(cnz>=int(0.5*expDataCopy.shape[1]))[0]
-        median_filtered_genes = expDataFiltered.index[keepers]    
+        median_filtered_genes = expDataFiltered.index[keepers]
         expDataFiltered = expressionData.loc[median_filtered_genes,:]
-    
+
     if quantile_normalize is True:
         expDataFiltered = quantile_norm(expDataFiltered,axis=0)
-        
+
     finalExpData = pd.DataFrame(np.log2(expDataFiltered+1))
     finalExpData.index = expDataFiltered.index
     finalExpData.columns = expDataFiltered.columns
-    
+
     return finalExpData
 
 def preProcessTPM(tpm):
-    
-    from scipy import stats
     cutoff = stats.norm.ppf(0.00001)
-    
+
     tmp_array_raw = np.array(tpm)
     keep = []
     keepappend = keep.append
@@ -567,41 +666,42 @@ def correct_batch_effects(df, do_preprocess_tpm):
     return zscoredExpression
 
 
-def preprocess(filename, mapfile, convert_ids=True, do_preprocess_tpm=True):
-    rawExpression = readFileToDf(filename)
-    rawExpressionZeroFiltered = remove_null_rows(rawExpression)
-    zscoredExpression = correct_batch_effects(rawExpressionZeroFiltered, do_preprocess_tpm)
-    if convert_ids:
-        expressionData, conversionTable = identifierConversion(zscoredExpression, mapfile)
-        return expressionData, conversionTable
+def preprocess(filename, mapfile_path, do_preprocess_tpm=True):
+    raw_expression = readFileToDf(filename)
+    raw_expression_zero_filtered = remove_null_rows(raw_expression)
+    zscored_expression = correct_batch_effects(raw_expression_zero_filtered, do_preprocess_tpm)
+
+    if mapfile_path is not None:
+        exp_data, conversion_table = convert_ids_orig(zscored_expression, mapfile_path)
+        return exp_data, conversion_table
     else:
-        return zscoredExpression
+        return zscored_expression
 
 # =============================================================================
 # Functions used for clustering
 # =============================================================================
 
-def pearson_array(array,vector):    
+def pearson_array(array,vector):
     #r = (1/n-1)sum(((x-xbar)/sx)((y-ybar)/sy))
-    
     ybar = np.mean(vector)
-    sy = np.std(vector,ddof=1)    
+    sy = np.std(vector,ddof=1)
     yterms = (vector-ybar)/float(sy)
-    
+
     array_sx = np.std(array,axis=1,ddof=1)
-    
+
     if 0 in array_sx:
         passIndex = np.where(array_sx>0)[0]
         array = array[passIndex,:]
         array_sx = array_sx[passIndex]
-        
-    array_xbar = np.mean(array,axis=1)            
+
+    array_xbar = np.mean(array,axis=1)
     product_array = np.zeros(array.shape)
-    
+
     for i in range(0,product_array.shape[1]):
         product_array[:,i] = yterms[i]*(array[:,i] - array_xbar)/array_sx
-        
+
     return np.sum(product_array,axis=1)/float(product_array.shape[1]-1)
+
 
 def getAxes(clusters,expressionData):
     axes = {}
@@ -5532,7 +5632,6 @@ def showCluster(expressionData,coexpressionModules,key):
 # =============================================================================
 
 def precision(matrix, labels):
-    
     vector = labels.iloc[:,0]
     vectorMasked = (matrix*vector).T
     TP = np.array(np.sum(vectorMasked,axis=0)).astype(float)
@@ -5548,10 +5647,8 @@ def labelVector(hr,lr):
     labelsDf.columns = ["label"]
     return labelsDf
 
-def predictRisk(expressionDf,regulonModules,model_filename):
-    import pickle
-    
-    expressionDf, _ = identifierConversion(expressionData=expressionDf)
+def predictRisk(expressionDf, regulonModules, model_filename, mapfile_path):
+    expressionDf, _ = convert_ids_orig(expressionDf, mapfile_path)
     expressionDf = zscore(expressionDf)
     bkgdDf = backgroundDf(expressionDf)
     overExpressedMembers = biclusterMembershipDictionary(regulonModules,bkgdDf,label=2,p=0.1)
