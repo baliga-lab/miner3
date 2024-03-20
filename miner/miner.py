@@ -86,7 +86,10 @@ def write_json(dict_, output_file):
         json.dump(dict_, fp)
     return
 
-def readFileToDf(filename):
+def read_file_to_df(filename: str) -> pd.DataFrame:
+    """
+    reads a dataframe from a file, attempting to guess the separator
+    """
     extension = filename.split(".")[-1]
     if extension == "csv":
         df = pd.read_csv(filename,index_col=0,header=0)
@@ -97,7 +100,7 @@ def readFileToDf(filename):
         df = pd.read_csv(filename,index_col=0,header=0,sep="\t")
         shape = df.shape
         if shape[1] == 0:
-            df = pd.read_csv(filename,index_col=0,header=0)    
+            df = pd.read_csv(filename,index_col=0,header=0)
     return df
 
 def fileToReferenceDictionary(filename,dictionaryName,index_col=0):
@@ -155,14 +158,14 @@ def download_file_from_google_drive(id, destination):
 
     save_response_content(response, destination) 
     print('download complete')
-    
+
     return
 
 # =============================================================================
 # Functions used for pre-processing data
 # =============================================================================
 
-def remove_null_rows(df):
+def remove_null_rows(df: pd.DataFrame):
     minimum = np.percentile(df,0)
     if minimum == 0:
         filteredDf = df.loc[df.sum(axis=1)>0,:]
@@ -170,7 +173,7 @@ def remove_null_rows(df):
         filteredDf = df
     return filteredDf
 
-def convertToEnsembl(df,conversionTable,input_format=None):
+def convertToEnsembl(df, conversionTable, input_format=None):
     from collections import Counter
     # Index Conversion table on ENSG notation
     conversionTableEnsg = conversionTable.copy()
@@ -212,12 +215,12 @@ def convertToEnsembl(df,conversionTable,input_format=None):
     conversion_df = pd.DataFrame(conversionEnsg)
     conversion_df.index = conversionAffy
     conversion_df.columns = ["Ensembl"]
-    
+
     return conversion_df
 
 def AffyToEnsemblDf(validation_path,expressionData_file,conversionTable_file,reference_index,output_file):
-    expressionData_matrix = readFileToDf(expressionData_file)
-    conversionTable = readFileToDf(conversionTable_file)
+    expressionData_matrix = read_file_to_df(expressionData_file)
+    conversionTable = read_file_to_df(conversionTable_file)
     expressionData_ensembl = convertToEnsembl(expressionData_matrix,conversionTable,input_format=None)
     expressionData_ensembl.head()
 
@@ -246,7 +249,7 @@ def AffyToEnsemblDf(validation_path,expressionData_file,conversionTable_file,ref
     return converted_expression
 
 
-def convert_ids_orig(exp_data, conversion_file_path):
+def convert_ids_orig(exp_data: pd.DataFrame, conversion_file_path: str):
     """
     Original table based conversion. This is needlessly complicated and
     just kept here for legacy purposes.
@@ -649,8 +652,7 @@ def zscore(expressionData):
     print("completed z-transformation.")
     return transform
 
-def correct_batch_effects(df, do_preprocess_tpm):
-
+def correct_batch_effects(df: pd.DataFrame, do_preprocess_tpm: bool):
     zscoredExpression = zscore(df)
     means = []
     stds = []
@@ -666,8 +668,8 @@ def correct_batch_effects(df, do_preprocess_tpm):
     return zscoredExpression
 
 
-def preprocess(filename, mapfile_path, do_preprocess_tpm=True):
-    raw_expression = readFileToDf(filename)
+def preprocess(filename: str, mapfile_path: str, do_preprocess_tpm: bool=True):
+    raw_expression = read_file_to_df(filename)
     raw_expression_zero_filtered = remove_null_rows(raw_expression)
     zscored_expression = correct_batch_effects(raw_expression_zero_filtered, do_preprocess_tpm)
 
@@ -681,7 +683,7 @@ def preprocess(filename, mapfile_path, do_preprocess_tpm=True):
 # Functions used for clustering
 # =============================================================================
 
-def pearson_array(array,vector):
+def pearson_array(array, vector):
     #r = (1/n-1)sum(((x-xbar)/sx)((y-ybar)/sy))
     ybar = np.mean(vector)
     sy = np.std(vector,ddof=1)
@@ -703,7 +705,7 @@ def pearson_array(array,vector):
     return np.sum(product_array,axis=1)/float(product_array.shape[1]-1)
 
 
-def getAxes(clusters,expressionData):
+def getAxes(clusters, expressionData):
     axes = {}
     for key in list(clusters.keys()):
         genes = clusters[key]
