@@ -69,7 +69,7 @@ if __name__ == '__main__':
                         help="minimum overexpression samples")
     parser.add_argument('-mx', '--maxexclusion', type=float, default=0.5,
                         help="maximum samples excluded")
-    parser.add_argument('-rs', '--randstate', type=float, default=12,
+    parser.add_argument('-rs', '--randstate', type=int, default=12,
                         help="random state")
     parser.add_argument('-oxt', '--overexpthresh', type=int, default=80,
                         help="overexpression threshold")

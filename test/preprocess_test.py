@@ -52,14 +52,27 @@ def test_correct_batch_effects_no_tpm():
             assert abs(df2.values[i, j] - (-0.8164965809277261)) < EPS
 
 
-"""
+def test_convert_ids_orig():
+    """
+    Test convert_ids_orig() function. Only the rows that have a matching
+    gene will make it through this.
+    """
+    # simulate the preprocess data loader
+    raw_expression = miner.read_file_to_df('testdata/exp_data-001.csv')
+    raw_expression_zero_filtered = miner.remove_null_rows(raw_expression)
+    zscored_expression = miner.correct_batch_effects(raw_expression_zero_filtered, do_preprocess_tpm=True)
+
+    exp, conv_table = miner.convert_ids_orig(zscored_expression, 'testdata/identifier_mappings.txt')
+    assert (7, 3) == exp.shape
+
+
 def test_preprocess_main_simple():
-    exp, conv_table = miner.preprocess('testdata/exp_data-001.csv', 'testdata/conv_table-001.tsv')
-    assert (10, 3) == exp.shape
-    for i in range(3):
-        for j in range(3):
-            assert abs(exp.values[i, j] - (-0.8164965809277261)) < EPS
-"""
+    exp, conv_table = miner.preprocess('testdata/exp_data-001.csv', 'testdata/identifier_mappings.txt')
+    print(exp)
+    assert (7, 3) == exp.shape
+    #for i in range(3):
+    #    for j in range(3):
+    #        assert abs(exp.values[i, j] - (-0.8164965809277261)) < EPS
 
 def test_has_testdir():
     assert os.path.exists('miner_mindata')

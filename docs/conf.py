@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'isb-miner3'
-copyright = '2019-2020, Matt Wall'
+copyright = '2019-2024, Matt Wall'
 author = 'Matt Wall'
 
 # The short X.Y version
 version = '3.0'
 # The full version, including alpha/beta/rc tags
-release = '3.0.0'
+release = '1.1.9'
 
 
 # -- General configuration ---------------------------------------------------
@@ -58,7 +58,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

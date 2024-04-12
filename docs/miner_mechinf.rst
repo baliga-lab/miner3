@@ -23,6 +23,8 @@ at the command prompt:
 
     optional arguments:
       -h, --help            show this help message and exit
+      --skip_tpm            skip TPM preprocessing for single cell data
+      --tfs2genes FILE      override TF to genes mapping (pickle or JSON file)
       -mc MINCORR, --mincorr MINCORR
                             minimum correlation
 
@@ -39,6 +41,8 @@ Parameters in detail
 
 In addition, you can specify the following optional arguments:
 
+  * ``--skip_tpm``: to skip the TPM preprocessing step for single-cell data
+  * ``--tfs2genes``: provide alternative TF to genes mapping for computation
   * ``--mincorr`` or ``--mc``: the minimum correlation value.
 
 Output in detail

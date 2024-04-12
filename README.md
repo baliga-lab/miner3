@@ -49,3 +49,20 @@ Note that the gene names will be converted to Ensembl Gene ID format
 
   1. miner does not yet support expression data in counts format. Ensure that data is in log2(TPM+1) or log2(FPKM+1) format.
   2. mechanistic inference includes a step that enforces a minimum correlation coefficient. If your results seem too sparse, try decreasing the minCorrelation parameter.
+
+
+## For maintainers
+
+### Documentation
+
+This project's documentation is provided as github pages. It is generated from ReStructured Text files
+and generated using the tool sphinx.
+In order to update it, edit the `.rst` documents in docs and generate HTML files by
+
+```
+make html
+```
+
+Provided there is a functioning sphinx system installed, the documentation will be in the build html
+directory and should be copied to the `gh-pages` branch of this repository.
+
