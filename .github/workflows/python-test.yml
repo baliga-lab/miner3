@@ -23,6 +23,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        lfs: 'true'
     - name: Download and extract test data
       run: |
         wget https://networks.systemsbiology.net/downloads/miner-examples/miner_mindata.tar.gz
