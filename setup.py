@@ -20,7 +20,7 @@ INSTALL_REQUIRES = ['numpy>=1.22.0', 'scipy>=1.8.0', 'pandas>=2.0.0', 'scikit-le
                     'tqdm>=4.64.0']
 setuptools.setup(
     name="isb_miner3",
-    version="1.1.9",
+    version="1.2.0",
     author="Matt Wall",
     author_email="mwall@systemsbiology.org",
     description="MINER analysis tools",
