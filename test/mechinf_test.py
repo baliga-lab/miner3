@@ -34,11 +34,17 @@ def test_revise_initial_clusters():
 
     with open("testdata/revised_clusters-002.json") as infile:
         ref_revised_clusters = json.load(infile)
+        ref_cluster_nums = sorted(ref_revised_clusters.keys())
 
     exp = pd.read_csv('testdata/exp_data_preprocessed-002.csv', header=0,
                       index_col=0)
     revised_clusters = miner.reviseInitialClusters(init_clusters, exp)
-    assert(ref_revised_clusters, revised_clusters)
+    cluster_nums = sorted(revised_clusters.keys())
+    #assert(ref_revised_clusters == revised_clusters)
+    assert(ref_cluster_nums == cluster_nums)
+    for cluster_num in cluster_nums:
+        assert(sorted(ref_revised_clusters[cluster_num]) ==
+               sorted(revised_clusters[cluster_num]))
 
 
 def test_mechanistic_inference_tfbsdb1():
@@ -58,4 +64,20 @@ def test_mechanistic_inference_tfbsdb1():
                                                     correlationThreshold=0.2,
                                                     numCores=5,
                                                     database_path=database_path)
-    assert(ref_mechanistic_output, mechanistic_output)
+    assert(sorted(ref_mechanistic_output.keys()) ==
+           sorted(mechanistic_output.keys()))
+    for regulon in mechanistic_output.keys():
+        # 1. test the contents of each regulon
+        ref_elem = ref_mechanistic_output[regulon]
+        elem = mechanistic_output[regulon]
+        assert(sorted(ref_elem.keys()) == sorted(elem.keys()))
+        # 2. now test map for each TF mapping in the regulon
+        for tf in elem.keys():
+            pval, genes = elem[tf]
+            ref_pval, ref_genes = ref_elem[tf]
+            assert(pval == ref_pval)
+            assert(sorted(genes) == sorted(ref_genes))
+
+
+
+
