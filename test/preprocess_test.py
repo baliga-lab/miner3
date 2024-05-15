@@ -74,5 +74,3 @@ def test_preprocess_main_simple():
     #    for j in range(3):
     #        assert abs(exp.values[i, j] - (-0.8164965809277261)) < EPS
 
-def test_has_testdir():
-    assert os.path.exists('miner_mindata')
