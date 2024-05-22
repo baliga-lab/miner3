@@ -23,9 +23,9 @@ def test_cluster():
                                   maxSamplesExcluded=0.5,
                                   random_state=12,
                                   overExpressionThreshold=80)
-    #assert(ref_init_clusters == init_clusters)
     for cluster in init_clusters:
         assert(len(cluster) >= 6)
+    #assert(len(ref_init_clusters) == len(init_clusters))
 
 
 def test_revise_initial_clusters():
@@ -40,7 +40,6 @@ def test_revise_initial_clusters():
                       index_col=0)
     revised_clusters = miner.reviseInitialClusters(init_clusters, exp)
     cluster_nums = sorted(revised_clusters.keys())
-    #assert(ref_revised_clusters == revised_clusters)
     assert(ref_cluster_nums == cluster_nums)
     for cluster_num in cluster_nums:
         assert(sorted(ref_revised_clusters[cluster_num]) ==
@@ -77,7 +76,3 @@ def test_mechanistic_inference_tfbsdb1():
             ref_pval, ref_genes = ref_elem[tf]
             assert(pval == ref_pval)
             assert(sorted(genes) == sorted(ref_genes))
-
-
-
-
