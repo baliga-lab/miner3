@@ -28,6 +28,39 @@ def test_cluster():
     #assert(len(ref_init_clusters) == len(init_clusters))
 
 
+def test_recursive_decomposition():
+    cluster = []
+    with open("testdata/cluster1-00.txt") as infile:
+        for line in infile:
+            cluster.append(line.strip())
+    exp = pd.read_csv('testdata/exp_data_preprocessed-002.csv', header=0,
+                      index_col=0)
+
+    ref_recdecomp = []
+    with open("testdata/ref_recdecomp.txt") as infile:
+        for line in infile:
+            ref_recdecomp.append(line.strip().split(" "))
+
+    rec_decomp = miner.recursive_decomposition(cluster, exp, 6, 80)
+    assert(ref_recdecomp == rec_decomp)
+
+
+def test_recursive_alignment():
+    cluster = []
+    with open("testdata/cluster1-00.txt") as infile:
+        for line in infile:
+            cluster.append(line.strip())
+    exp = pd.read_csv('testdata/exp_data_preprocessed-002.csv', header=0,
+                      index_col=0)
+    ref_recalign = []
+    with open("testdata/ref_recalign.txt") as infile:
+        for line in infile:
+            ref_recalign.append(line.strip().split(" "))
+
+    rec_align = miner.recursive_alignment(cluster, exp, 6, 80)
+    assert(ref_recalign == rec_align)
+
+
 def test_revise_initial_clusters():
     with open("testdata/init_clusters-002.json") as infile:
         init_clusters = json.load(infile)

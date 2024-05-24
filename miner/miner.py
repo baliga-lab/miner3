@@ -836,7 +836,7 @@ def decompose(geneset,expressionData,minNumberGenes=6,pct_threshold=80):
     unmixedFiltered = [i for i in unmix_tst if len(i)>=minNumberGenes]
     return unmixedFiltered
 
-def recursiveDecomposition(geneset,expressionData,minNumberGenes=6,pct_threshold=80):
+def recursive_decomposition(geneset,expressionData,minNumberGenes=6,pct_threshold=80):
 
     unmixedFiltered = decompose(geneset,expressionData,minNumberGenes,pct_threshold)
     if len(unmixedFiltered) == 0:
@@ -972,8 +972,8 @@ def reconstruction(decomposedList,expressionData,threshold=0.925):
     recombine = combineClusters(axes,clusters,threshold)
     return recombine
 
-def recursiveAlignment(geneset,expressionData,minNumberGenes=6,pct_threshold=80):
-    recDecomp = recursiveDecomposition(geneset,expressionData,minNumberGenes,pct_threshold)
+def recursive_alignment(geneset,expressionData,minNumberGenes=6,pct_threshold=80):
+    recDecomp = recursive_decomposition(geneset,expressionData,minNumberGenes,pct_threshold)
     if len(recDecomp) == 0:
         return []
 
@@ -996,6 +996,8 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
 
     startTimer = time.time()
     trial = -1
+    pca = PCA(10, random_state=random_state)
+
     for step in range(maxStep):
         trial += 1
         progress = (100. / maxStep) * trial
@@ -1004,7 +1006,6 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
         bestMapped = []
 
         #Get the first 10 PCs of df (i.e., the expression subset)
-        pca = PCA(10, random_state=random_state)
         principalComponents = pca.fit_transform(df.T)
         principalDf = pd.DataFrame(principalComponents)
         principalDf.index = df.columns
@@ -1019,7 +1020,7 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
             cluster2 = np.array(df.index[np.where(pearson < lowpass)[0]])
 
             for clst in [cluster1, cluster2]:
-                pdc = recursiveAlignment(clst, expressionData=df, minNumberGenes=minNumberGenes, pct_threshold=pct_threshold)
+                pdc = recursive_alignment(clst, expressionData=df, minNumberGenes=minNumberGenes, pct_threshold=pct_threshold)
                 if len(pdc) == 0:
                     continue
                 elif len(pdc) == 1:
