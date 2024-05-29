@@ -15,7 +15,7 @@ from .regulon_quality import confirm_regulon_coregulation
 def test_cluster():
     exp = pd.read_csv('testdata/exp_data_preprocessed-002.csv', header=0,
                       index_col=0)
-    with open("testdata/init_clusters-002.json") as infile:
+    with open("testdata/init_clusters-001.json") as infile:
         ref_init_clusters = json.load(infile)
     init_clusters = miner.cluster(exp,
                                   minNumberGenes=6,
@@ -23,9 +23,29 @@ def test_cluster():
                                   maxSamplesExcluded=0.5,
                                   random_state=12,
                                   overExpressionThreshold=80)
+    #with open("init_clusters-002.json", "w") as outfile:
+    #    json.dump(init_clusters, outfile)
+
     for cluster in init_clusters:
         assert(len(cluster) >= 6)
     #assert(len(ref_init_clusters) == len(init_clusters))
+
+
+def test_get_axes():
+    cluster = []
+    with open("testdata/cluster1-00.txt") as infile:
+        for line in infile:
+            cluster.append(line.strip())
+    exp = pd.read_csv('testdata/exp_data_preprocessed-002.csv', header=0,
+                      index_col=0)
+    with open("testdata/ref_axes-000.json") as infile:
+        ref_axes = json.load(infile)
+
+    axes = miner.get_axes({"1": cluster}, exp, random_state=12)
+    json_axes = {}
+    for key, arr  in axes.items():
+        json_axes[key] = list(arr)
+    assert(ref_axes == json_axes)
 
 
 def test_recursive_decomposition():

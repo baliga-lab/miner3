@@ -685,7 +685,7 @@ def pearson_array(array, vector):
     return np.sum(product_array,axis=1)/float(product_array.shape[1]-1)
 
 
-def getAxes(clusters, expressionData):
+def get_axes(clusters, expressionData, random_state):
     axes = {}
     for key in list(clusters.keys()):
         genes = clusters[key]
@@ -959,7 +959,7 @@ def combineClusters(axes,clusters,threshold=0.925):
 
     return revisedClusters
 
-def reconstruction(decomposedList,expressionData,threshold=0.925):
+def reconstruction(decomposedList,expressionData, random_state, threshold=0.925):
 
     if len(decomposedList) == 0:
         return decomposedList
@@ -968,16 +968,17 @@ def reconstruction(decomposedList,expressionData,threshold=0.925):
             return decomposedList
 
     clusters = {i:decomposedList[i] for i in range(len(decomposedList))}
-    axes = getAxes(clusters,expressionData)
+    axes = get_axes(clusters, expressionData, random_state)
     recombine = combineClusters(axes,clusters,threshold)
     return recombine
 
-def recursive_alignment(geneset,expressionData,minNumberGenes=6,pct_threshold=80):
+def recursive_alignment(geneset,expressionData,minNumberGenes=6,
+                        pct_threshold=80, random_state=12):
     recDecomp = recursive_decomposition(geneset,expressionData,minNumberGenes,pct_threshold)
     if len(recDecomp) == 0:
         return []
 
-    reconstructed = reconstruction(recDecomp,expressionData)
+    reconstructed = reconstruction(recDecomp,expressionData, random_state)
     reconstructedList = [reconstructed[i] for i in list(reconstructed.keys()) if len(reconstructed[i])>minNumberGenes]
     reconstructedList.sort(key = lambda s: -len(s))
     return reconstructedList
@@ -1020,7 +1021,7 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
             cluster2 = np.array(df.index[np.where(pearson < lowpass)[0]])
 
             for clst in [cluster1, cluster2]:
-                pdc = recursive_alignment(clst, expressionData=df, minNumberGenes=minNumberGenes, pct_threshold=pct_threshold)
+                pdc = recursive_alignment(clst, expressionData=df, minNumberGenes=minNumberGenes, pct_threshold=pct_threshold, random_state=random_state)
                 if len(pdc) == 0:
                     continue
                 elif len(pdc) == 1:
@@ -1193,19 +1194,21 @@ def membershipToIncidence(membershipDictionary,expressionData):
 
     return incidence
 
-def processCoexpressionLists(lists,expressionData,threshold=0.925):
-    reconstructed = reconstruction(lists,expressionData,threshold)
+def processCoexpressionLists(lists,expressionData, random_state, threshold=0.925):
+    reconstructed = reconstruction(lists,expressionData, random_state, threshold)
     reconstructedList = [reconstructed[i] for i in reconstructed.keys()]
     reconstructedList.sort(key = lambda s: -len(s))
     return reconstructedList
 
-def reviseInitialClusters(clusterList,expressionData,threshold=0.925):
-    coexpressionLists = processCoexpressionLists(clusterList,expressionData,threshold)
+
+def reviseInitialClusters(clusterList, expressionData, random_state=12, threshold=0.925):
+    coexpressionLists = processCoexpressionLists(clusterList, expressionData, random_state, threshold)
     coexpressionLists.sort(key= lambda s: -len(s))
 
     for iteration in range(5):
         previousLength = len(coexpressionLists)
-        coexpressionLists = processCoexpressionLists(coexpressionLists,expressionData,threshold)
+        coexpressionLists = processCoexpressionLists(coexpressionLists, expressionData,
+                                                     random_state, threshold)
         newLength = len(coexpressionLists)
         if newLength == previousLength:
             break
