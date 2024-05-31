@@ -23,12 +23,14 @@ def test_cluster():
                                   maxSamplesExcluded=0.5,
                                   random_state=12,
                                   overExpressionThreshold=80)
-    #with open("init_clusters-002.json", "w") as outfile:
+    #with open("init_clusters-001.json", "w") as outfile:
     #    json.dump(init_clusters, outfile)
 
     for cluster in init_clusters:
         assert(len(cluster) >= 6)
-    #assert(len(ref_init_clusters) == len(init_clusters))
+    assert(len(ref_init_clusters) == len(init_clusters))
+    for i in range(len(init_clusters)):
+        assert(sorted(ref_init_clusters[i]) == sorted(init_clusters[i]))
 
 EPS = 0.00001
 

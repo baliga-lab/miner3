@@ -1017,8 +1017,8 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
                 continue
             highpass = max(np.percentile(pearson,95), 0.1)
             lowpass = min(np.percentile(pearson,5), -0.1)
-            cluster1 = np.array(df.index[np.where(pearson > highpass)[0]])
-            cluster2 = np.array(df.index[np.where(pearson < lowpass)[0]])
+            cluster1 = np.array(sorted(df.index[np.where(pearson > highpass)[0]]))
+            cluster2 = np.array(sorted(df.index[np.where(pearson < lowpass)[0]]))
 
             for clst in [cluster1, cluster2]:
                 pdc = recursive_alignment(clst, expressionData=df, minNumberGenes=minNumberGenes, pct_threshold=pct_threshold, random_state=random_state)
@@ -1038,7 +1038,7 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
             stackGenes = []
 
         # filter out best-represented genes prior to next iteration
-        residualGenes = list(set(df.index) - set(stackGenes))
+        residualGenes = sorted(set(df.index) - set(stackGenes))
         df = df.loc[residualGenes, :]
 
         # computationally fast surrogate for passing the overexpressed significance test:
