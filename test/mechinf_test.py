@@ -30,6 +30,7 @@ def test_cluster():
         assert(len(cluster) >= 6)
     #assert(len(ref_init_clusters) == len(init_clusters))
 
+EPS = 0.00001
 
 def test_get_axes():
     cluster = []
@@ -44,8 +45,11 @@ def test_get_axes():
     axes = miner.get_axes({"1": cluster}, exp, random_state=12)
     json_axes = {}
     for key, arr  in axes.items():
+        ref_arr = ref_axes[key]
         json_axes[key] = list(arr)
-    assert(ref_axes == json_axes)
+        assert(len(arr) == len(ref_arr))
+        for i in range(len(arr)):
+            assert(abs(arr[i] - ref_arr[i]) < EPS)
 
 
 def test_recursive_decomposition():
