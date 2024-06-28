@@ -716,7 +716,7 @@ def FrequencyMatrix(matrix,overExpThreshold = 1):
 
     fm = np.zeros((len(index),len(index)))
     for key in list(frequency_dictionary.keys()):
-        tmp = frequency_dictionary[key]
+        tmp = sorted(frequency_dictionary[key])
         if len(tmp) == 0:
             continue
         count = Counter(tmp)
@@ -799,20 +799,17 @@ def unmix(df,iterations=25,returnAll=False):
         sumDf1 = df.sum(axis=1)
         maxSum = df.index[np.argmax(np.array(sumDf1))]
         hits = np.where(df.loc[maxSum]>0)[0]
-        hitIndex = list(df.index[hits])
+        hitIndex = sorted(df.index[hits])
         block = df.loc[hitIndex,hitIndex]
         blockSum = block.sum(axis=1)
-        coreBlock = list(blockSum.index[np.where(blockSum>=np.median(blockSum))[0]])
-        remainder = list(set(df.index)-set(coreBlock))
+        coreBlock = sorted(blockSum.index[np.where(blockSum>=np.median(blockSum))[0]])
+        remainder = sorted(set(df.index)-set(coreBlock))
         frequencyClusters.append(coreBlock)
-        if len(remainder)==0:
-            return frequencyClusters
-        if len(coreBlock)==1:
-            return frequencyClusters
-        df = df.loc[remainder,remainder]
-    if returnAll is True:
+        if len(remainder) == 0 or len(coreBlock) == 1:
+            return sorted(frequencyClusters)
+    if returnAll:
         frequencyClusters.append(remainder)
-    return frequencyClusters
+    return sorted(frequencyClusters)
 
 def remix(df,frequencyClusters):
     finalClusters = []
@@ -984,6 +981,8 @@ def recursive_alignment(geneset,expressionData,minNumberGenes=6,
     return reconstructedList
 
 
+NUM_PCA_COMPONENTS = 10
+
 def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamplesExcluded=0.50, svd_solver="arpack",
             random_state=12, overExpressionThreshold=80, pct_threshold=80):
     df = expressionData.copy()
@@ -996,7 +995,7 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
 
     startTimer = time.time()
     trial = -1
-    pca = PCA(10, random_state=random_state)
+    pca = PCA(NUM_PCA_COMPONENTS, random_state=random_state)
 
     for step in range(maxStep):
         trial += 1
@@ -1010,7 +1009,7 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
         principalDf = pd.DataFrame(principalComponents)
         principalDf.index = df.columns
 
-        for i in range(10):
+        for i in range(NUM_PCA_COMPONENTS):
             pearson = pearson_array(np.array(df), np.array(principalDf[i]))
             if len(pearson) == 0:
                 continue
