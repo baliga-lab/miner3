@@ -988,7 +988,6 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
             random_state=12, overExpressionThreshold=80, pct_threshold=80):
     df = expressionData.copy()
     maxStep = int(np.round(10*maxSamplesExcluded))
-    allGenesMapped = []
     bestHits = []
 
     zero = np.percentile(expressionData,0)
@@ -1021,17 +1020,18 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
             cluster2 = np.array(sorted(df.index[np.where(pearson < lowpass)[0]]))
 
             for clst in [cluster1, cluster2]:
-                pdc = recursive_alignment(clst, expressionData=df, minNumberGenes=minNumberGenes, pct_threshold=pct_threshold, random_state=random_state)
+                pdc = recursive_alignment(clst, expressionData=df, minNumberGenes=minNumberGenes,
+                                          pct_threshold=pct_threshold, random_state=random_state)
                 if len(pdc) == 0:
                     continue
                 elif len(pdc) == 1:
-                    genesMapped.append(pdc[0])
+                    genesMapped.append(sorted(pdc[0]))
                 elif len(pdc) > 1:
                     for j in range(len(pdc) - 1):
                         if len(pdc[j]) > minNumberGenes:
-                            genesMapped.append(pdc[j])
+                            genesMapped.append(sorted(pdc[j]))
 
-        allGenesMapped.extend(genesMapped)
+        genesMapped = sorted(genesMapped)
         try:
             stackGenes = np.hstack(genesMapped)
         except:
