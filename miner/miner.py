@@ -820,7 +820,7 @@ def remix(df,frequencyClusters):
         minGenes = max(4,cut*len(cluster))
         keepers = list(sliceDf.columns[np.where(sumSlice>=minGenes)[0]])
         keepers = list(set(keepers)|set(cluster))
-        finalClusters.append(keepers)
+        finalClusters.append(sorted(keepers))
         finalClusters.sort(key = lambda s: -len(s))
     return finalClusters
 
@@ -951,7 +951,7 @@ def combineClusters(axes,clusters,threshold=0.925):
     revisedClusters = {}
     combinedKeys = decomposeDictionaryToLists(combineAxes)
     for keyList in combinedKeys:
-        genes = list(set(np.hstack([clusters[i] for i in keyList])))
+        genes = sorted(set(np.hstack([clusters[i] for i in keyList])))
         revisedClusters[len(revisedClusters)] = genes
 
     return revisedClusters
@@ -966,8 +966,8 @@ def reconstruction(decomposedList,expressionData, random_state, threshold=0.925)
 
     clusters = {i:decomposedList[i] for i in range(len(decomposedList))}
     axes = get_axes(clusters, expressionData, random_state)
-    recombine = combineClusters(axes,clusters,threshold)
-    return recombine
+    return combineClusters(axes,clusters,threshold)
+
 
 def recursive_alignment(geneset,expressionData,minNumberGenes=6,
                         pct_threshold=80, random_state=12):
@@ -976,7 +976,7 @@ def recursive_alignment(geneset,expressionData,minNumberGenes=6,
         return []
 
     reconstructed = reconstruction(recDecomp,expressionData, random_state)
-    reconstructedList = [reconstructed[i] for i in list(reconstructed.keys()) if len(reconstructed[i])>minNumberGenes]
+    reconstructedList = [reconstructed[i] for i in list(reconstructed.keys()) if len(reconstructed[i]) > minNumberGenes]
     reconstructedList.sort(key = lambda s: -len(s))
     return reconstructedList
 
