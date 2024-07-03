@@ -70,6 +70,21 @@ def test_recursive_decomposition():
     rec_decomp = miner.recursive_decomposition(cluster, exp, 6, 80)
     assert(ref_recdecomp == rec_decomp)
 
+def test_reconstruction():
+    exp = pd.read_csv('testdata/exp_data_preprocessed-002.csv', header=0,
+                      index_col=0)
+    decomposed_list = []
+    with open("testdata/ref_recdecomp.txt") as infile:
+        for line in infile:
+            decomposed_list.append(line.strip().split(" "))
+    cluster = miner.reconstruction(decomposed_list, exp, random_state=12)
+    #with open("ref_reconstruction_cluster.json", "w") as outfile:
+    #    json.dump(cluster, outfile)
+    with open("testdata/ref_reconstruction_cluster-001.json") as infile:
+        ref_cluster = json.load(infile)
+    for cluster_num, cluster_members in ref_cluster.items():
+        assert(cluster_members == cluster[int(cluster_num)])
+
 
 def test_recursive_alignment():
     cluster = []
