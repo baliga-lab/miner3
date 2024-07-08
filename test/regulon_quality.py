@@ -7,7 +7,7 @@ def confirm_regulon_coregulation(tf2genes, model):
     overlaps = []
     regulons = set(model["Regulon_ID"])
     for r in sorted(regulons):
-        rows = df[df['Regulon_ID'] == r]
+        rows = model[model['Regulon_ID'] == r]
         regulator = list(set(rows["Regulator"]))[0]
         binding_profile = set(tf2genes[regulator])
         regulon_genes = set(rows["Gene"])
