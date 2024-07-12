@@ -1065,7 +1065,7 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
     print('\ncoexpression clustering completed in {:.2f} minutes'.format((stopTimer-startTimer)/60.))
     return bestHits
 
-def backgroundDf(expressionData):
+def background_df(expressionData):
 
     low = np.percentile(expressionData,100./3,axis=0)
     high = np.percentile(expressionData,200./3,axis=0)
@@ -4914,7 +4914,7 @@ def labelVector(hr,lr):
 def predictRisk(expressionDf, regulonModules, model_filename, mapfile_path):
     expressionDf, _ = convert_ids_orig(expressionDf, mapfile_path)
     expressionDf = zscore(expressionDf)
-    bkgdDf = backgroundDf(expressionDf)
+    bkgdDf = background_df(expressionDf)
     overExpressedMembers = biclusterMembershipDictionary(regulonModules,bkgdDf,label=2,p=0.1)
     overExpressedMembersMatrix = membershipToIncidence(overExpressedMembers,expressionDf)
 
@@ -6842,7 +6842,7 @@ def generateRegulonActivity(regulonModules, expressionData, p=0.05, returnBkgd="
     referenceDictionary = regulonModules
 
     # create a background matrix used for statistical hypothesis testing
-    bkgd = backgroundDf(expressionData)
+    bkgd = background_df(expressionData)
 
     # for each cluster, give samples that show high coherent cluster activity
     ## label 0 -down active, 1 - inactive, 2 - up active

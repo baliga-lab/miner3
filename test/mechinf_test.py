@@ -152,3 +152,13 @@ def test_mechanistic_inference_tfbsdb1():
             ref_pval, ref_genes = ref_elem[tf]
             assert(pval == ref_pval)
             assert(sorted(genes) == sorted(ref_genes))
+
+def test_background_df():
+    exp = pd.read_csv('testdata/exp_data_preprocessed-002.csv', header=0,
+                      index_col=0)
+    ref_background = pd.read_csv("testdata/ref_background_df-001.csv", index_col=0)
+    df = miner.background_df(exp)
+    #df.to_csv("ref_background_df-001.csv")
+    print(df)
+    print(ref_background)
+    assert(df.equals(ref_background))
