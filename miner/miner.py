@@ -1075,9 +1075,10 @@ def background_df(expressionData):
     for i in range(bkgd.shape[1]):
         lowCut = evenCuts[i][0]
         highCut = evenCuts[i][1]
-        bkgd.iloc[:,i][bkgd.iloc[:,i]>=highCut]=1
-        bkgd.iloc[:,i][bkgd.iloc[:,i]<=lowCut]=-1
-        bkgd.iloc[:,i][np.abs(bkgd.iloc[:,i])!=1]=0
+        tmp = bkgd.iloc[:,i]
+        tmp[tmp >= highCut] = 1
+        tmp[tmp <= lowCut] = -1
+        tmp[np.abs(tmp) != 1] = 0
 
     return bkgd
 

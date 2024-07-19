@@ -1,10 +1,11 @@
-import datetime,pkg_resources
+import datetime
+from importlib.metadata import version
 
 name = "miner3"
 GIT_SHA = '$Id$'
 
 try:
-    __version__ = pkg_resources.get_distribution(name)
+    __version__ = version(name)
 except:
     __version__ = 'development'
 
