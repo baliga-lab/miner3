@@ -1958,6 +1958,9 @@ def kmeans(df,numClusters,random_state=None):
     return clusters, labels, centroids
 
 def mosaic(dfr,clusterList,minClusterSize_x=4,minClusterSize_y=5,allow_singletons=True,max_groups=50,saveFile=None,random_state=12):
+    # sklearn.Kmeans() can throw a lot of warnings, which can be ignored
+    warnings.simplefilter("ignore")
+
     lowResolutionPrograms = [[] for i in range(len(clusterList))]
     sorting_hat = []
     for i in range(len(clusterList)):
@@ -2057,6 +2060,7 @@ def mosaic(dfr,clusterList,minClusterSize_x=4,minClusterSize_y=5,allow_singleton
         if len(sil_scores) > 0:
             top_hit = min(np.where(np.array(sil_scores)>=0.999*max(sil_scores))[0]+2)
             clusters_x, labels_x, centroids_x = kmeans(df,numClusters=top_hit,random_state=random_state)
+
             clusters_x.sort(key=lambda s: -len(s))
             x_clusters.append(list(clusters_x))
         elif len(sil_scores) == 0:
@@ -5077,7 +5081,6 @@ def generatePredictionMatrix(srv,mtrx,high_risk_cutoff = 0.2):
     return hrMatrix, lrMatrix
 
 def plotRiskStratification(lbls,mtrx,srv,survival_tag,resultsDirectory=None):
-    import warnings
     warnings.filterwarnings("ignore")
 
     hr_dt = mtrx.columns[lbls.astype(bool)]
@@ -5222,7 +5225,6 @@ def predictionMatrix(membership_datasets,survival_datasets,high_risk_cutoff=0.20
 
 
 def riskStratification(lbls,mtrx,guan_srv,survival_tag,classifier,resultsDirectory=None,plot_all=False,guan_rank=False,high_risk_cutoffs=None,plot_any=True):
-    import warnings
     warnings.filterwarnings("ignore")
 
     from sklearn import metrics
@@ -5866,7 +5868,6 @@ def stiched_heatmap2(heatmap_list,cmap = "Blues",results_directory=None):
     return
 
 def composite_figure_4(stitched_list,cmaps,id_table=None,results_directory=None,font_scale=1.5,figsize=(16,15)):
-    #import warnings
     #warnings.filterwarnings("ignore")
     import seaborn as sns
     # Instantiate figure
