@@ -1328,14 +1328,16 @@ def parallelRegulonExpansion(eigengenes,regulonModules,regulonDf,expressionData,
     expandedRegulons = {key:list(set(expandedRegulons[key])) for key in expandedRegulons.keys()}
     return expandedRegulons
 
-def principalDf(dict_,expressionData,regulons=None,subkey='genes',minNumberGenes=8,random_state=12,svd_solver="arpack"):
+def principal_df(dict_, expressionData, regulons=None, subkey='genes',
+                 minNumberGenes=8, random_state=12,
+                 svd_solver="arpack"):
 
     pcDfs = []
     setIndex = set(expressionData.index)
 
     if regulons is not None:
         dict_, df = regulonDictionary(regulons)
-    for i in list(dict_.keys()):
+    for i in sorted(dict_.keys()):
         if subkey is not None:
             genes = list(set(dict_[i][subkey])&setIndex)
             if len(genes) < minNumberGenes:
@@ -1360,7 +1362,8 @@ def principalDf(dict_,expressionData,regulons=None,subkey='genes',minNumberGenes
         pcDfs.append(principalDf)
 
     principalMatrix = pd.concat(pcDfs,axis=1)
-
+    # returns with sorted index and columns for consistency
+    #return principalMatrix.sort_index(axis=0).sort_index(axis=1)
     return principalMatrix
 
 
@@ -3183,7 +3186,7 @@ def inferSubtypes(referenceMatrix,primaryMatrix,secondaryMatrix,primaryDictionar
 # =============================================================================
 
 def getEigengenes(coexpressionModules,expressionData,regulon_dict=None,saveFolder=None):
-    eigengenes = principalDf(coexpressionModules,expressionData,subkey=None,regulons=regulon_dict,minNumberGenes=1)
+    eigengenes = principal_df(coexpressionModules,expressionData,subkey=None,regulons=regulon_dict,minNumberGenes=1)
     eigengenes = eigengenes.T
     index = np.sort(np.array(eigengenes.index).astype(int))
     eigengenes = eigengenes.loc[index.astype(str),:]
@@ -4689,7 +4692,7 @@ def generateCausalInputs(expressionData,mechanisticOutput,coexpressionModules,sa
     bcTfIncidence.to_csv(os.path.join(saveFolder,"bcTfIncidence.csv"))
 
     #eigengenes
-    eigengenes = principalDf(coexpressionModules,expressionData,subkey=None,regulons=regulon_dict,minNumberGenes=1)
+    eigengenes = principal_df(coexpressionModules,expressionData,subkey=None,regulons=regulon_dict,minNumberGenes=1)
     eigengenes = eigengenes.T
     index = np.sort(np.array(eigengenes.index).astype(int))
     eigengenes = eigengenes.loc[index.astype(str),:]

@@ -129,7 +129,7 @@ def test_mechanistic_inference_tfbsdb1():
         revised_clusters = json.load(infile)
     exp = pd.read_csv('testdata/exp_data_preprocessed-002.csv', header=0,
                       index_col=0)
-    axes = miner.principalDf(revised_clusters, exp,
+    axes = miner.principal_df(revised_clusters, exp,
                              subkey=None, minNumberGenes=1)
     database_path = os.path.join('miner', 'data', 'network_dictionaries', 'tfbsdb_tf_to_genes.pkl')
     with open('testdata/mechinf-002.json') as infile:
@@ -164,3 +164,27 @@ def test_background_df():
     print(df)
     print(ref_background)
     assert(df.equals(ref_background))
+
+
+def test_principal_df():
+    with open("testdata/revised_clusters-002.json") as infile:
+        revised_clusters = json.load(infile)
+    tmp = {}
+    # convert string keys to int
+    for cluster, genes in revised_clusters.items():
+        tmp[int(cluster)] = genes
+    revised_clusters = tmp
+    exp = pd.read_csv('testdata/exp_data_preprocessed-002.csv', header=0,
+                      index_col=0)
+    ref_pdf = pd.read_csv("testdata/ref_principal_df-001.csv", header=0,
+                          index_col=0)
+
+    #print("REVISED_CLUSTERS: ", revised_clusters)
+    pdf = miner.principal_df(revised_clusters, exp, subkey=None)
+    #pdf.to_csv("ref_principal_df-001.csv")
+    assert(pdf.shape == ref_pdf.shape)
+    assert(sorted(pdf.index) == sorted(ref_pdf.index))
+    assert(sorted(pdf.columns) == sorted(ref_pdf.columns))
+    result = pdf.compare(ref_pdf)
+    #print("TESTRESULT: ", result)
+

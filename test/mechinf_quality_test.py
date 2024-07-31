@@ -32,8 +32,8 @@ def test_cluster_quality_tfbsdb1():
 
 
     revised_clusters = miner.reviseInitialClusters(init_clusters, exp)
-    axes = miner.principalDf(revised_clusters, exp,
-                             subkey=None, minNumberGenes=1)
+    axes = miner.principal_df(revised_clusters, exp,
+                              subkey=None, minNumberGenes=1)
 
     mechanistic_output = miner.mechanisticInference(axes, revised_clusters,
                                                     exp,
@@ -73,8 +73,8 @@ def test_cluster_quality_tfbsdb2():
 
 
     revised_clusters = miner.reviseInitialClusters(init_clusters, exp)
-    axes = miner.principalDf(revised_clusters, exp,
-                             subkey=None, minNumberGenes=1)
+    axes = miner.principal_df(revised_clusters, exp,
+                              subkey=None, minNumberGenes=1)
 
     mechanistic_output = miner.mechanisticInference(axes, revised_clusters,
                                                     exp,

@@ -79,8 +79,8 @@ if __name__ == '__main__':
             # running from source
             database_path = os.path.join('miner', 'data', 'network_dictionaries', 'tfbsdb_tf_to_genes.pkl')
 
-    axes = miner.principalDf(revised_clusters, exp_data,
-                             subkey=None, minNumberGenes=1)
+    axes = miner.principal_df(revised_clusters, exp_data,
+                              subkey=None, minNumberGenes=1)
 
     # analyze revised clusters for enrichment in relational database
     # (default: transcription factor binding site database)
