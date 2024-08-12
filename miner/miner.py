@@ -42,6 +42,7 @@ import logging
 import traceback
 
 from tqdm.notebook import tqdm, trange
+from .progressbar import printProgressBar
 
 
 # =============================================================================
@@ -994,13 +995,15 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
                                    for i in range(expressionData.shape[1])])
 
     startTimer = time.time()
-    trial = -1
+    #trial = -1
     pca = PCA(NUM_PCA_COMPONENTS, random_state=random_state)
 
+    printProgressBar(0, maxStep, prefix = 'Progress:', suffix='Complete', length=50)
     for step in range(maxStep):
-        trial += 1
-        progress = (100. / maxStep) * trial
-        print('{:.2f} percent complete'.format(progress))
+        #trial += 1
+        #progress = (100. / maxStep) * trial
+        #print('{:.2f} percent complete'.format(progress))
+        printProgressBar(step, maxStep, prefix = 'Progress:', suffix='Complete', length=50)
         genesMapped = []
         bestMapped = []
 
