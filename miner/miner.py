@@ -998,12 +998,11 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
     #trial = -1
     pca = PCA(NUM_PCA_COMPONENTS, random_state=random_state)
 
-    printProgressBar(0, maxStep, prefix = 'Progress:', suffix='Complete', length=50)
+    printProgressBar(0, maxStep, prefix='Progress:', suffix='Complete', length=50)
     for step in range(maxStep):
         #trial += 1
         #progress = (100. / maxStep) * trial
         #print('{:.2f} percent complete'.format(progress))
-        printProgressBar(step, maxStep, prefix = 'Progress:', suffix='Complete', length=50)
         genesMapped = []
         bestMapped = []
 
@@ -1062,6 +1061,9 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
             remainder = [i for i in np.arange(df.shape[1]) if i not in dominant]
             df = df.iloc[:, remainder]
 
+        # update progress
+        printProgressBar(step + 1, maxStep, prefix='Progress:', suffix='Complete', length=50)
+ 
     bestHits.sort(key=lambda s: -len(s))
 
     stopTimer = time.time()
@@ -1289,10 +1291,15 @@ def regulonExpansion(task):
     reference_index = np.array(eigengenes.index).astype(str)
     expanded_modules = {key:regulonModules[key] for key in regulonModules.keys()}
     ct = -1
-    for gene in list(set(list(tfbsdbGenes.keys()))&set(expressionData.index))[start:stop]:
-        ct+=1
-        if ct%1000 == 0:
-            print("Completed {:d} of {:d} iterations".format(ct,stop-start))
+    printProgressBar(0, maxStep, prefix='Progress:', suffix='Complete',
+                     length=50)
+    genes = list(set(list(tfbsdbGenes.keys()))&set(expressionData.index))[start:stop]
+    for gene in genes:
+        ct += 1
+        #if ct%1000 == 0:
+        #    print("Completed {:d} of {:d} iterations".format(ct,stop-start))
+        printProgressBar(0, len(genes), prefix='Progress:', suffix='Complete',
+                         length=50)
         pa = pearson_array(eigenarray,np.array(expressionData.loc[gene,:]))
         tfbs = tfbsdbGenes[gene]
         hits = np.where(pa>corrThreshold)[0]
@@ -1501,7 +1508,7 @@ def tfbsdbEnrichment(task):
 
 def mechanisticInference(axes,revisedClusters,expressionData,correlationThreshold=0.3,numCores=5,p=0.05,
                          database_path=None):
-    print('Running mechanistic inference')
+    #print('Running mechanistic inference')
     """
     if override_database is None:
         tfToGenesPath = os.path.join(dataFolder,"network_dictionaries",database)
@@ -1510,7 +1517,6 @@ def mechanisticInference(axes,revisedClusters,expressionData,correlationThreshol
         tfToGenes = override_database
     """
     if database_path.endswith(".pkl"):
-        print("READING TFBS2GENES: ", database_path)
         tfToGenes = read_pkl(database_path)
     elif database_path.endswith(".json"):
         with open(database_path) as infile:
@@ -2269,7 +2275,7 @@ def univariate_comparison(subtypes,srv,expressionData,network_activity_diff,n_it
 
     # Define subtype of patients
     for name in subtypes.keys():
-        print("Iterating subtype "+name)
+        #print("Iterating subtype "+name)
         # Define subtype patients
         subtype = subtypes[name]
 
@@ -2572,7 +2578,7 @@ def optimize_threshold(most_predictive_gene,ordered_patients,network_activity_di
         f1_tmp = f1(y_true,np.array(np.array(network_activity_diff.loc[most_predictive_gene,ordered_patients])>thr).astype(int))
         opt_thr.append(f1_tmp)
 
-    print("F1 score: {:.2f}".format(max(opt_thr)))
+    #print("F1 score: {:.2f}".format(max(opt_thr)))
 
     threshold = np.arange(-1,1,0.01)[np.argsort(np.array(opt_thr))[-1]]
     return threshold
@@ -2611,10 +2617,15 @@ def optimize_parameters_ridge(x,y,names,srv,n_iter=10,show=True,results_director
              ]
     means = []
     stds = []
+
+    printProgressBar(0, len(ranges), prefix='Progress:', suffix='Complete',
+                     length=50)
     for ar in range(len(ranges)):
         a_range = ranges[ar]
 
-        print("Iteration {:d} of {:d}".format(ar+1,len(ranges)))
+        #print("Iteration {:d} of {:d}".format(ar+1,len(ranges)))
+        printProgressBar(ar, len(ranges), prefix='Progress:', suffix='Complete',
+                         length=50)
         all_curves = []
         for iteration in range(n_iter):
             train_test_dict = train_test(x,y,names)
@@ -3094,7 +3105,7 @@ def getStratifyingRegulons(states_list_1,states_list_2,reference_matrix,p=0.05,p
     results.sort_values(by="t-statistic",ascending=False,inplace=True)
     print(results)
 
-    if plot is True:
+    if plot:
         ttest_data_source = reference_matrix.loc[results.index,np.hstack([np.hstack(states_list_1),np.hstack(states_list_2)])]
         figure = plt.figure()
         ax = figure.gca()
@@ -3508,7 +3519,7 @@ def survivalMembershipAnalysis(task):
     ct=0
     for key in keys:
         ct+=1
-        if ct%100==0:
+        if ct % 100 == 0:
             print("completed {:d} iterations on thread".format(ct))
         try:
             memberVector = pd.DataFrame(membershipDf.loc[key,overlapPatients])
