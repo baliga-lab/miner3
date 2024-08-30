@@ -1291,9 +1291,9 @@ def regulonExpansion(task):
     reference_index = np.array(eigengenes.index).astype(str)
     expanded_modules = {key:regulonModules[key] for key in regulonModules.keys()}
     ct = -1
+    genes = list(set(list(tfbsdbGenes.keys()))&set(expressionData.index))[start:stop]
     printProgressBar(0, len(genes), prefix='Progress:', suffix='Complete',
                      length=50)
-    genes = list(set(list(tfbsdbGenes.keys()))&set(expressionData.index))[start:stop]
     for gene in genes:
         ct += 1
         #if ct%1000 == 0:
