@@ -56,4 +56,5 @@ if __name__ == '__main__':
     with open(args.regulons) as infile:
         regulon_modules = json.load(infile)
 
+    bcmembers.bcmembers(exp_data, regulon_modules, args.outdir)
     subtypes.subtypes(exp_data, regulon_modules, args.outdir)

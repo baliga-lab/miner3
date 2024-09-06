@@ -20,7 +20,7 @@ INSTALL_REQUIRES = ['numpy>=1.22.0', 'scipy>=1.8.0', 'pandas>=2.0.0', 'scikit-le
                     'tqdm>=4.64.0']
 setuptools.setup(
     name="isb_miner3",
-    version="1.2.0",
+    version="1.2.1",
     author="Matt Wall",
     author_email="mwall@systemsbiology.org",
     description="MINER analysis tools",
@@ -47,7 +47,8 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Python Modules"
     ],
     scripts=['bin/miner3-coexpr', 'bin/miner3-mechinf',
-             'bin/miner3-bcmembers', 'bin/miner3-subtypes',
-             'bin/miner3-survival', 'bin/miner3-causalinference', 'bin/miner3-causalinf-pre',
-             'bin/miner3-causalinf-post', 'bin/miner3-neo', 'bin/miner3-riskpredict',
+             'bin/miner3-subtypes',
+             'bin/miner3-survival',
+             'bin/miner3-causalinference',
+             'bin/miner3-riskpredict',
              'bin/gene2opentargets', 'bin/drug2opentargets'])

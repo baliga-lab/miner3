@@ -26,7 +26,7 @@ author = 'Matt Wall'
 # The short X.Y version
 version = '3.0'
 # The full version, including alpha/beta/rc tags
-release = '1.1.9'
+release = '1.2.1'
 
 
 # -- General configuration ---------------------------------------------------
