@@ -39,6 +39,12 @@ Output in detail
 
 After successful completion there will be the following files in the output directory
 
+  * ``coherentMembers.csv``
+  * ``overExpressedMembers.csv``
+  * ``underExpressedMembers.csv``
+  * ``dysregulatedMembers.csv``
+  * ``overExpressedMembers.json``
+  * ``underExpressedMembers.json``
   * ``binaryActivityMap.pdf``
   * ``regulon_activity_heatmap.pdf``
   * ``centroid_clusters_heatmap.pdf``
