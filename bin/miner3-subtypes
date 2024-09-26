@@ -13,7 +13,7 @@ import logging
 
 from miner import miner, util
 from miner import GIT_SHA, __version__ as pkg_version
-from miner import subtypes
+from miner import subtypes, bcmembers
 
 
 DESCRIPTION = """miner3-subtypes - MINER compute sample subtypes

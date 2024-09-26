@@ -39,23 +39,10 @@ def plot_expression_stats(exp_data, outdir):
                 bbox_inches="tight")
 
 
-def coexpression(expfile, mapfile, outdir, skip_tpm,
+def coexpression(exp_data, outdir, skip_tpm,
                  mingenes, minoverexpsamp, maxexclusion,
                  overexpthresh,
                  randstate):
-    if not os.path.exists(expfile):
-        sys.exit("expression file not found")
-    if not os.path.exists(mapfile):
-        sys.exit("identifier mapping file not found")
-
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
-
-    with open(os.path.join(outdir, 'run_info.txt'), 'w') as outfile:
-        util.write_dependency_infos(outfile)
-
-    exp_data, conv_table = miner.preprocess(expfile, mapfile,
-                                            do_preprocess_tpm=(skip_tpm))
     plot_expression_stats(exp_data, outdir)
 
     t1 = time.time()
@@ -105,3 +92,4 @@ def coexpression(expfile, mapfile, outdir, skip_tpm,
 
     t2 = time.time()
     logging.info("Completed clustering module in {:.2f} minutes".format((t2-t1)/60.))
+    return revised_clusters

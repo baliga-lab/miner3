@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import logging
 from pkg_resources import Requirement, resource_filename
 
-from miner import miner, util
+from miner import miner, util, causal_inference as causalinf
 from miner import GIT_SHA
 from miner import __version__ as MINER_VERSION
 
@@ -111,41 +111,41 @@ if __name__ == '__main__':
     if args.common_mutations is not None:
         logging.info('causal network analysis for common mutations')
         common_mutations = pd.read_csv(args.common_mutations, index_col=0, header=0)
-        miner.causalNetworkAnalysis(regulon_matrix=regulon_df,
-                                    expression_matrix=exp_data,
-                                    reference_matrix=eigengenes,
-                                    mutation_matrix=common_mutations,
-                                    resultsDirectory=result_dir,
-                                    minRegulons=1,
-                                    significance_threshold=0.05,
-                                    causalFolder="causal_results_common_mutations")
+        causalinf.causalNetworkAnalysis(regulon_matrix=regulon_df,
+                                        expression_matrix=exp_data,
+                                        reference_matrix=eigengenes,
+                                        mutation_matrix=common_mutations,
+                                        resultsDirectory=result_dir,
+                                        minRegulons=1,
+                                        significance_threshold=0.05,
+                                        causalFolder="causal_results_common_mutations")
 
     if args.translocations is not None:
         logging.info('causal network analysis for translocations')
         translocations = pd.read_csv(args.translocations, index_col=0, header=0)
-        miner.causalNetworkAnalysis(regulon_matrix=regulon_df,
-                                    expression_matrix=exp_data,
-                                    reference_matrix=eigengenes,
-                                    mutation_matrix=translocations,
-                                    resultsDirectory=result_dir,
-                                    minRegulons=1,
-                                    significance_threshold=0.05,
-                                    causalFolder="causal_results_translocations")
+        causalinf.causalNetworkAnalysis(regulon_matrix=regulon_df,
+                                        expression_matrix=exp_data,
+                                        reference_matrix=eigengenes,
+                                        mutation_matrix=translocations,
+                                        resultsDirectory=result_dir,
+                                        minRegulons=1,
+                                        significance_threshold=0.05,
+                                        causalFolder="causal_results_translocations")
 
     if args.cytogenetics is not None:
         logging.info('causal network analysis for cytogenetics')
         cytogenetics = pd.read_csv(args.cytogenetics, index_col=0, header=0)
-        miner.causalNetworkAnalysis(regulon_matrix=regulon_df,
-                                    expression_matrix=exp_data,
-                                    reference_matrix=eigengenes,
-                                    mutation_matrix=cytogenetics,
-                                    resultsDirectory=result_dir,
-                                    minRegulons=1,
-                                    significance_threshold=0.05,
-                                    causalFolder="causal_results_cytogenetics")
+        causalinf.causalNetworkAnalysis(regulon_matrix=regulon_df,
+                                        expression_matrix=exp_data,
+                                        reference_matrix=eigengenes,
+                                        mutation_matrix=cytogenetics,
+                                        resultsDirectory=result_dir,
+                                        minRegulons=1,
+                                        significance_threshold=0.05,
+                                        causalFolder="causal_results_cytogenetics")
 
     # compile all causal results
-    causal_results = miner.readCausalFiles(result_dir)
+    causal_results = causalinf.readCausalFiles(result_dir)
     causal_result_path = os.path.join(args.outdir, "completeCausalResults.csv")
     causal_results.to_csv(causal_result_path)
 
@@ -169,9 +169,9 @@ if __name__ == '__main__':
     wire_diagram_out = os.path.join(args.outdir, 'wiring_diagram.csv')
     causal_results = pd.read_csv(causal_result_path, index_col=0, header=0)
     try:
-        wire_diagram = miner.wiringDiagram(causal_results, regulon_modules,
-                                           coherent_samples_matrix,
-                                           include_genes=False,
-                                           savefile=wire_diagram_out)
+        wire_diagram = causalinf.wiringDiagram(causal_results, regulon_modules,
+                                               coherent_samples_matrix,
+                                               include_genes=False,
+                                               savefile=wire_diagram_out)
     except:
         logging.warn("could not build wiring diagram !!!")

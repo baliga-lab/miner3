@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
 import logging
 
 from miner import GIT_SHA
 from miner import __version__ as MINER_VERSION
-from miner import coexpression
+from miner import coexpression, util, miner
 
 DESCRIPTION = """miner3-coexpr - MINER cluster expression data.
 MINER Version %s (Git SHA %s)""" % (str(MINER_VERSION).replace('miner3 ', ''),
@@ -38,7 +39,21 @@ if __name__ == '__main__':
                         help="overexpression threshold")
 
     args = parser.parse_args()
-    coexpression.coexpression(args.expfile, args.mapfile, args.outdir,
+
+    if not os.path.exists(args.expfile):
+        sys.exit("expression file not found")
+    if not os.path.exists(args.mapfile):
+        sys.exit("identifier mapping file not found")
+
+    if not os.path.exists(args.outdir):
+        os.makedirs(args.outdir)
+
+    with open(os.path.join(args.outdir, 'run_info.txt'), 'w') as outfile:
+        util.write_dependency_infos(outfile)
+
+    exp_data, conv_table = miner.preprocess(args.expfile, args.mapfile,
+                                            do_preprocess_tpm=(args.skip_tpm))
+    coexpression.coexpression(exp_data, args.outdir,
                               args.skip_tpm,
                               args.mingenes, args.minoverexpsamp,
                               args.maxexclusion, args.overexpthresh,
