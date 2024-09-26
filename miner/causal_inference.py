@@ -5,7 +5,6 @@ import os
 import time
 
 def causalNetworkAnalysis(regulon_matrix,expression_matrix,reference_matrix,mutation_matrix,resultsDirectory,minRegulons=1,significance_threshold=0.05,causalFolder="causal_results"):
-    print("Creating directories if dont exist")
     if not os.path.isdir(resultsDirectory):
         os.mkdir(resultsDirectory)
     # create results directory
@@ -28,7 +27,6 @@ def causalNetworkAnalysis(regulon_matrix,expression_matrix,reference_matrix,muta
     ps_1 = []
     index_1 = []
 
-    print("Testing correlation of TF and cluster eigengene.")
     # Test correlation of TF and cluster eigengene
     missing_tfs = list(set(regulon_df_bcindex.loc[:,"Regulator"])-set(expression_matrix.index))
     for key in list(set(regulon_df_bcindex.index)):
@@ -52,8 +50,7 @@ def causalNetworkAnalysis(regulon_matrix,expression_matrix,reference_matrix,muta
     correlation_df_regulator_index = correlation_df_bcindex.copy() # Table
     correlation_df_regulator_index.index = correlation_df_regulator_index["Regulator"]
 
-    print("Looping through each mutation")
-    ###
+    # loop through each mutation
     for mut_ix in range(mutation_matrix.shape[0]):
         time.sleep(0.01)
         mutation_name = mutation_matrix.index[mut_ix]
@@ -242,11 +239,12 @@ def readCausalFiles(directory):
     return causalData
 
 
-def wiringDiagram(causal_results,regulonModules,coherent_samples_matrix,include_genes=False,savefile=None):
+def wiringDiagram(causal_results, regulonModules, coherent_samples_matrix,
+                  include_genes=False, savefile=None):
     cytoscape_output = []
     for regulon in list(set(causal_results.index)):
 
-        genes = regulonModules[regulon]
+        genes = regulonModules[str(regulon)]
         samples = coherent_samples_matrix.columns[coherent_samples_matrix.loc[int(regulon),:]==1]
         condensed_genes = (";").join(genes)
         condensed_samples = (";").join(samples)
@@ -273,14 +271,14 @@ def wiringDiagram(causal_results,regulonModules,coherent_samples_matrix,include_
 
         elif type(causal_info) is pd.core.series.Series:
             for i in range(causal_info.shape[0]):
-                mutation = causal_info[0]
-                reg = causal_info[1]
-                tmp_edge1 = causal_info[3]
+                mutation = causal_info.iloc[0]
+                reg = causal_info.iloc[1]
+                tmp_edge1 = causal_info.iloc[3]
                 if tmp_edge1 >0:
                     edge1 = "up-regulates"
                 elif tmp_edge1 <0:
                     edge1 = "down-regulates"
-                tmp_edge2 = causal_info[5]
+                tmp_edge2 = causal_info.iloc[5]
                 if tmp_edge2 >0:
                     edge2 = "activates"
                 elif tmp_edge2 <0:

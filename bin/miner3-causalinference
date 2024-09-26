@@ -12,6 +12,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import logging
 from pkg_resources import Requirement, resource_filename
+import traceback
 
 from miner import miner, util, causal_inference as causalinf
 from miner import GIT_SHA
@@ -174,4 +175,5 @@ if __name__ == '__main__':
                                                include_genes=False,
                                                savefile=wire_diagram_out)
     except:
-        logging.warn("could not build wiring diagram !!!")
+        traceback.print_exc()
+        logging.warning("could not build wiring diagram !!!")
