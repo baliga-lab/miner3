@@ -2,8 +2,11 @@
 
 import os
 import json
+import time
 import numpy as np
 import matplotlib.pyplot as plt
+import logging
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 from miner import miner
 
@@ -30,11 +33,11 @@ def subtypes(exp_data, regulon_modules, outdir):
     secondary_matrix = underexpressed_members_matrix
     secondary_dictionary = underexpressed_members
 
-    states, centroid_clusters = miner.inferSubtypes(reference_matrix, primary_matrix,
-                                                    secondary_matrix,
-                                                    primary_dictionary,
-                                                    secondary_dictionary,
-                                                    minClusterSize=int(np.ceil(0.01*exp_data.shape[1])),restricted_index=None)
+    states, centroid_clusters = inferSubtypes(reference_matrix, primary_matrix,
+                                              secondary_matrix,
+                                              primary_dictionary,
+                                              secondary_dictionary,
+                                              minClusterSize=int(np.ceil(0.01*exp_data.shape[1])),restricted_index=None)
     states_dictionary = {str(i):states[i] for i in range(len(states))}
     with open(os.path.join(outdir, "transcriptional_states.json"), 'w') as outfile:
         json.dump(states_dictionary, outfile)
@@ -82,3 +85,88 @@ def subtypes(exp_data, regulon_modules, outdir):
                                               filename=os.path.join(outdir, "programs_vs_states.pdf"),
                                               csvpath=os.path.join(outdir, "programs_vs_states.csv"),
                                               showplot=True)
+
+
+def inferSubtypes(referenceMatrix,primaryMatrix,secondaryMatrix,primaryDictionary,secondaryDictionary,minClusterSize=5,restricted_index=None):
+
+    t1 = time.time()
+
+    if restricted_index is not None:
+        referenceMatrix = referenceMatrix.loc[restricted_index,:]
+        primaryMatrix = primaryMatrix.loc[restricted_index,:]
+        secondaryMatrix = secondaryMatrix.loc[restricted_index,:]
+
+    # perform initial subtype clustering
+    similarityClusters = miner.f1Decomposition(primaryDictionary,thresholdSFM=0.1)
+    similarityClusters = [list(set(cluster)&set(referenceMatrix.columns)) for cluster in similarityClusters]
+    initialClasses = [i for i in similarityClusters if len(i)>4]
+    if len(initialClasses)==0:
+        print('No subtypes were detected')
+
+    # expand initial subtype clusters
+    centroidClusters, centroidMatrix = miner.centroidExpansion(initialClasses,
+                                                               primaryMatrix,
+                                                               f1Threshold=0.1,
+                                                               returnCentroids=True) #0.3
+
+    subcentroidClusters = []
+    for c in range(len(centroidClusters)):
+        tmp_cluster = centroidClusters[c]
+        if len(tmp_cluster) < 2*minClusterSize:
+            if len(tmp_cluster)>0:
+                subcentroidClusters.append(tmp_cluster)
+            continue
+
+        sampleDictionary = {key:list(set(tmp_cluster)&set(secondaryDictionary[key])) for key in secondaryDictionary}
+        sampleMatrix = secondaryMatrix.loc[:,tmp_cluster]
+
+        # perform initial subtype clustering
+        similarityClusters = miner.f1Decomposition(sampleDictionary,
+                                                   thresholdSFM=0.1)
+        initialClasses = [i for i in similarityClusters if len(i)>4]
+        if len(initialClasses)==0:
+            subcentroidClusters.append(tmp_cluster)
+            continue
+
+        # expand initial subtype clusters
+        tmp_centroidClusters, tmp_centroidMatrix = miner.centroidExpansion(
+            initialClasses,sampleMatrix,f1Threshold = 0.1,
+            returnCentroids=True) #0.3
+        tmp_centroidClusters.sort(key=len,reverse=True)
+
+        if len(tmp_centroidClusters) <= 1:
+            subcentroidClusters.append(tmp_cluster)
+            continue
+
+        for cc in range(len(tmp_centroidClusters)):
+            new_cluster = tmp_centroidClusters[cc]
+            if len(new_cluster)==0:
+                continue
+            if len(new_cluster) < minClusterSize:
+                if cc == 0:
+                    other_clusters = []
+                    other_clusters.append(np.hstack(tmp_centroidClusters))
+                    tmp_centroidClusters = other_clusters
+                    break
+                other_clusters = tmp_centroidClusters[0:cc]
+                new_centroids = miner.getCentroids(other_clusters,referenceMatrix)
+                unlabeled = list(set(np.hstack(tmp_centroidClusters))-set(np.hstack(other_clusters)))
+                for sample in unlabeled:
+                    pearson = miner.pearson_array(np.array(new_centroids).T,np.array(referenceMatrix.loc[:,sample]))
+                    top_hit = np.argsort(pearson)[-1]
+                    other_clusters[top_hit].append(sample)
+                tmp_centroidClusters = other_clusters
+                break
+
+            elif len(new_cluster) >= minClusterSize:
+                continue
+
+        for ccc in range(len(tmp_centroidClusters)):
+            if len(tmp_centroidClusters[ccc]) == 0:
+                continue
+            subcentroidClusters.append(tmp_centroidClusters[ccc])
+
+    t2 = time.time()
+    print("completed subtype inference in {:.2f} minutes".format((t2-t1)/60.))
+
+    return subcentroidClusters, centroidClusters

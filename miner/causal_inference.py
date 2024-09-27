@@ -691,8 +691,6 @@ def mutationMatrix(mutationPath,mutationFiles,minNumMutations=None):
 
     return filteredMutations
 
-def getMutations(mutationString,mutationMatrix):
-    return mutationMatrix.columns[np.where(mutationMatrix.loc[mutationString,:]>0)[0]]
 
 def mutationRegulatorStratification(mutationDf,tfDf,threshold=0.05,dictionary_=False):
 

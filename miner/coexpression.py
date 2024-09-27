@@ -4,6 +4,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import logging
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
 import json
 import numpy as np
 import sys

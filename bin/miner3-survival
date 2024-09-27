@@ -142,7 +142,7 @@ if __name__ == '__main__':
     reference_dictionary = pr_genes
 
     # create a background matrix used for statistical hypothesis testing
-    bkgd = miner.backgroundDf(exp_data)
+    bkgd = miner.background_df(exp_data)
     # for each cluster, give samples that show high coherent cluster activity
     overexpressed_members_pr = miner.biclusterMembershipDictionary(reference_dictionary,
                                                                   bkgd, label=2, p=0.05)

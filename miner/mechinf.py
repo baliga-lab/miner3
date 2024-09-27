@@ -3,6 +3,7 @@
 import os
 import json
 import logging
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
 import time
 import numpy as np
 
