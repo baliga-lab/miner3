@@ -11,6 +11,12 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 import logging
+
+import importlib.resources as importlib_resources
+import contextlib
+# replace with
+# importlib_resources.files('miner') / 'resource.dat'
+# importlib_resources.files("miner")  / "data" / "network_dictionaries"
 from pkg_resources import Requirement, resource_filename
 
 from miner import miner, util, GIT_SHA

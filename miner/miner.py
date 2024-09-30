@@ -1050,7 +1050,7 @@ def cluster(expressionData, minNumberGenes=6, minNumberOverExpSamples=4, maxSamp
 
         # update progress
         printProgressBar(step + 1, maxStep, prefix='Progress:', suffix='Complete', length=50)
- 
+
     bestHits.sort(key=lambda s: -len(s))
 
     stopTimer = time.time()
@@ -1282,7 +1282,7 @@ def regulonExpansion(task):
         ct += 1
         #if ct%1000 == 0:
         #    print("Completed {:d} of {:d} iterations".format(ct,stop-start))
-        printProgressBar(0, len(genes), prefix='Progress:', suffix='Complete',
+        printProgressBar(ct, len(genes), prefix='Progress:', suffix='Complete',
                          length=50)
         pa = pearson_array(eigenarray,np.array(expressionData.loc[gene,:]))
         tfbs = tfbsdbGenes[gene]
@@ -2250,8 +2250,6 @@ def train_test(x,y,names=None):
 
 def univariate_comparison(subtypes,srv,expressionData,network_activity_diff,n_iter = 500,hr_prop = 0.30,lr_prop = 0.70, results_directory = None):
 
-    import seaborn as sns
-    import matplotlib.pyplot as plt
     # Instantiate results dictionary
     boxplot_data = {name:{"expression":[],"activity":[]} for name in subtypes.keys()}
 
@@ -2331,11 +2329,14 @@ def univariate_comparison(subtypes,srv,expressionData,network_activity_diff,n_it
     boxplot_dataframe.columns = ["Subtype", "Method", "AUC"]
     boxplot_dataframe.loc[:,"AUC"] = pd.to_numeric(boxplot_dataframe.loc[:,"AUC"],errors='coerce')
 
-    sns.set(font_scale=1.5,style="whitegrid")
+    sns.set(font_scale=1.5, style="whitegrid")
     fig = plt.figure(figsize=(16,4))
-    p = sns.stripplot(data=boxplot_dataframe, x='Subtype', y='AUC',hue="Method",
+
+    p = sns.stripplot(data=boxplot_dataframe, x='Subtype', y='AUC',
+                      hue="Method",
                       dodge=True,jitter=0.25,size=3,palette='viridis')
-    ax = sns.boxplot(data=boxplot_dataframe, x='Subtype', y='AUC',hue="Method",
+    ax = sns.boxplot(data=boxplot_dataframe, x='Subtype', y='AUC',
+                     hue="Method",
                       dodge=True,fliersize=0,palette='viridis')
 
     # Add transparency to colors
@@ -2352,7 +2353,6 @@ def univariate_comparison(subtypes,srv,expressionData,network_activity_diff,n_it
     return boxplot_dataframe, boxplot_data, fig
 
 def univariate_survival(subtypes,optimized_survival_parameters,network_activity_diff,srv,results_directory=None,font_scale=1.5):
-    import seaborn as sns
 
     sns.set(font_scale=font_scale,style="whitegrid")
     ncols=len(subtypes.keys())
@@ -2393,9 +2393,12 @@ def univariate_survival(subtypes,optimized_survival_parameters,network_activity_
         max_time = max(timeline)
         ax.set_xticks(np.arange(0, max_time, 500))
         ax.set_xlabel(subtype_name)
-        if s==0:
+        if s == 0:
             ax.set_ylabel("Progression-free (%)")
-            ax.set_yticklabels(np.arange(-20, 120, 20))
+            #ax.set_yticklabels(np.arange(-20, 120, 20))
+            yticks = np.arange(-20, 120, 20)
+            yticklabels = list(map(str, yticks))
+            ax.set_yticks(yticks, labels=yticklabels)
 
         if s>0:
             ax.set_yticklabels("")
@@ -2424,7 +2427,9 @@ def composite_survival_figure(univariate_comparison_df,subtypes,
     f3_ax00 = fig3.add_subplot(f3_ax0[0, 0])
     f3_ax00.imshow(expressionData.loc[np.hstack(gene_clusters),np.hstack(states)],
                cmap='bwr',aspect=0.1,vmin=-2,vmax=2,interpolation='none')
-    f3_ax00.set_yticklabels(list(range(-1,7)))
+    yticks = list(range(-1,7))
+    yticklabels = list(map(str, yticks))
+    f3_ax00.set_yticks(yticks, labels=yticklabels)
     f3_ax00.set_ylabel("Genes (thousands)")
     f3_ax00.set_title("Gene expression")
     f3_ax00.set_xlabel("Patients")
@@ -2436,24 +2441,18 @@ def composite_survival_figure(univariate_comparison_df,subtypes,
                cmap='bwr',aspect=0.1,interpolation='none')
     f3_ax01.set_xlabel("Patients")
     f3_ax01.set_title("Network activity")
-    f3_ax01.set_yticklabels(list(range(-1,7)))
+    f3_ax01.set_yticks(yticks, labels=yticklabels)
     f3_ax01.set_ylabel("Genes (thousands)")
     plt.grid(False)
 
     # Boxplots
     f3_ax1 = fig3.add_subplot(gs[2, :])
     f3_ax1.set_xlabel("")
-    #f3_ax1.set_yticklabels(["",0,0.2,0.4,0.6,0.8,1.0,""])
 
     sns.stripplot(data=univariate_comparison_df, x='Subtype', y='AUC',hue="Method",
                       dodge=True,jitter=0.25,size=3,palette={"Expression":'#0055b3',"Activity":'#00C65E'})#,palette='viridis'
     sns.boxplot(data=univariate_comparison_df, x='Subtype', y='AUC',hue="Method",
                       dodge=True,fliersize=0,palette={"Expression":'#0055b3',"Activity":'#00C65E'})
-
-    # Add transparency to colors
-    #for patch in f3_ax1.artists:
-    #    r, g, b, a = patch.get_facecolor()
-    #    patch.set_facecolor((r, g, b, 0.9))
 
     #Black and white boxplots
     plt.setp(f3_ax1.artists, edgecolor = 'k', facecolor='w')
@@ -2508,13 +2507,12 @@ def composite_survival_figure(univariate_comparison_df,subtypes,
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-        #tit = gene_conversion(most_predictive_gene,list_symbols=True)[0]
-        #ax.set_title(tit)
-
         timeline = list(srv.loc[ordered_patients,srv.columns[0]])
         max_time = max(timeline)
-        #ax.set_xticks(np.arange(0, max_time, 500),rotation=45)
-        ax.set_xticklabels(np.arange(0, round(max_time/30.5), round(500/30.5)))
+        #ax.set_xticklabels(np.arange(0, round(max_time/30.5), round(500/30.5)))
+        xticks = np.arange(0, round(max_time/30.5), round(500/30.5))
+        xticklabels = list(map(str, xticks))
+        ax.set_xticks(xticks, labels=xticklabels)
         ax.set_xlabel("Weeks")
         if s==0:
             ax.set_ylabel("Progression-free (%)")
@@ -4879,7 +4877,8 @@ def boxplot_figure(boxplot_data,labels):
 
     formatted_boxplot_data = pd.DataFrame(np.vstack([formatted_data,formatted_labels]).T)
     formatted_boxplot_data.columns = ["data","label"]
-    formatted_boxplot_data.iloc[:,0] = formatted_boxplot_data.iloc[:,0].convert_objects(convert_numeric=True)
+    #formatted_boxplot_data.iloc[:,0] = formatted_boxplot_data.iloc[:,0].convert_objects(convert_numeric=True)
+    formatted_boxplot_data.iloc[:,0] = formatted_boxplot_data.iloc[:,0]
 
     return formatted_boxplot_data
 
