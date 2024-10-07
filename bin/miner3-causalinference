@@ -11,7 +11,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import logging
-from pkg_resources import Requirement, resource_filename
+import importlib.resources as importlib_resources
 import traceback
 
 from miner import miner, util, causal_inference as causalinf
@@ -32,8 +32,10 @@ def expand_regulons(exp_data, regulon_modules, regulon_df, eigengenes,
     note that in that case, tfbsdb_path must be defined
     """
     t1 = time.time()
-    tfbsdb_path = resource_filename(Requirement.parse("isb_miner2"),
-                                    'miner2/data/{}'.format("tfbsdb_tf_to_genes.pkl"))
+    tfbsdb_path = str(importlib_resources.files("miner").joinpath("data",
+                                                              "network_dictionaries",
+                                                              "tfbsdb_tf_to_genes.pkl"))
+
     expandedRegulons = miner.parallelRegulonExpansion(eigengenes, regulon_modules, regulon_df,
                                                       exp_data, tfbsdb_path,
                                                       overexpressed_members_matrix,

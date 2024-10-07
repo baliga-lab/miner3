@@ -13,11 +13,6 @@ matplotlib.use('Agg')
 import logging
 
 import importlib.resources as importlib_resources
-import contextlib
-# replace with
-# importlib_resources.files('miner') / 'resource.dat'
-# importlib_resources.files("miner")  / "data" / "network_dictionaries"
-from pkg_resources import Requirement, resource_filename
 
 from miner import miner, util, GIT_SHA
 from miner import __version__ as MINER_VERSION
@@ -88,11 +83,13 @@ if __name__ == '__main__':
         database_path = args.tfs2genes
     else:
         try:
-            database_path = resource_filename(Requirement.parse("isb_miner3"),
-                                              'miner/data/network_dictionaries/{}'.format("tfbsdb_tf_to_genes.pkl"))
+            database_path = importlib_resources.files("miner").joinpath("data", "network_dictionaries",
+                                                                        "tfbsdb_tf_to_genes.pkl")
+            database_path = str(database_path)  # turn into str object
         except:
             # running from source
             database_path = os.path.join('miner', 'data', 'network_dictionaries', 'tfbsdb_tf_to_genes.pkl')
+            print("DATABASE PATH (FROM ERROR): ", database_path)
 
     mechinf.mechanistic_inference(exp_data, args.mapfile, revised_clusters,
                                   database_path,
