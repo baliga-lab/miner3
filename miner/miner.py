@@ -795,6 +795,7 @@ def unmix(df,iterations=25,returnAll=False):
         frequencyClusters.append(coreBlock)
         if len(remainder) == 0 or len(coreBlock) == 1:
             return sorted(frequencyClusters)
+        df = df.loc[remainder,remainder]
     if returnAll:
         frequencyClusters.append(remainder)
     return sorted(frequencyClusters)

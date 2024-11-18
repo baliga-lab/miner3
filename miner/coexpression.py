@@ -54,7 +54,8 @@ def coexpression(exp_data, outdir, skip_tpm,
                                   random_state=randstate,
                                   overExpressionThreshold=overexpthresh)
 
-    revised_clusters = miner.reviseInitialClusters(init_clusters, exp_data)
+    revised_clusters = miner.reviseInitialClusters(init_clusters, exp_data,
+                                                   randstate)
     with open(os.path.join(outdir, "coexpressionDictionary.json"), 'w') as out:
         json.dump(revised_clusters, out)
 
