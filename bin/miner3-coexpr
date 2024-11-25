@@ -52,7 +52,7 @@ if __name__ == '__main__':
         util.write_dependency_infos(outfile)
 
     exp_data, conv_table = miner.preprocess(args.expfile, args.mapfile,
-                                            do_preprocess_tpm=(args.skip_tpm))
+                                            do_preprocess_tpm=(not args.skip_tpm))
     coexpression.coexpression(exp_data, args.outdir,
                               args.skip_tpm,
                               args.mingenes, args.minoverexpsamp,
