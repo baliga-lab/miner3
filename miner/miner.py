@@ -278,6 +278,9 @@ def convert_ids_orig(exp_data: pd.DataFrame, conversion_file_path: str):
     if transposed:
         exp_data = exp_data.T
 
+    # take care of the duplicate rows
+    exp_data = exp_data[~exp_data.index.duplicated(keep='first')]
+
     converted_data = exp_data.loc[mapped_genes, :]
 
     # build a conversion table based on the actual existing identifiers in the
